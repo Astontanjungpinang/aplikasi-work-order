@@ -111,28 +111,37 @@
     }
 
     async function submitWO(e) {
-      e.preventDefault();
-      const btn = document.getElementById("btnSubmit");
-      btn.innerText = "Mengirim...";
-      btn.disabled = true;
+  e.preventDefault();
+  const btn = document.getElementById("btnSubmit");
+  btn.innerText = "Mengirim...";
+  btn.disabled = true;
 
-      const payload = {
-        action: "create",
-        pelapor: document.getElementById("pelapor").value,
-        lokasi: document.getElementById("lokasi").value,
-        deskripsi: document.getElementById("deskripsi").value,
-        prioritas: document.getElementById("prioritas").value
-      };
+  const payload = {
+    action: "create",
+    pelapor: document.getElementById("pelapor").value,
+    lokasi: document.getElementById("lokasi").value,
+    deskripsi: document.getElementById("deskripsi").value,
+    prioritas: document.getElementById("prioritas").value
+  };
 
-      await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify(payload)
-      });
+  try {
+    await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload),
+      redirect: "follow"
+    });
 
-      document.getElementById("woForm").reset();
-      btn.innerText = "Kirim Work Order";
-      btn.disabled = false;
-      loadData();
+    document.getElementById("woForm").reset();
+    alert("Work Order berhasil dikirim!");
+    setTimeout(loadData, 1500);
+  } catch (err) {
+    alert("Gagal mengirim Work Order: " + err);
+  } finally {
+    // Memastikan tombol kembali normal
+    btn.innerText = "Kirim Work Order";
+    btn.disabled = false;
+  }
     }
 
     // Tentukan PIN keamanan admin di sini (misal: 1234)
