@@ -10,7 +10,7 @@
 
   <script>
     // URL GOOGLE APPS SCRIPT
-    const API_URL = "https://script.google.com/macros/s/AKfycbysfJb1tnTGzh58ClARjmn0lGDmb7i5VmVyOOC4j6kG8pHeW3EZloERR0sn_uIYEpvKdQ/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbyz3O2GIc662YyBVoeahlbzyua11hXtLMyJUMnoSpNVPUblH3clpQwrZJi-rAMk3rJQ9w/exec";
     
     // PASSWORD ADMIN UNTUK AKSI STATUS
     const ADMIN_PASSWORD = "admin2026";
@@ -132,4 +132,276 @@
         renderTableData(data);
       } catch (err) {
         console.error("Error loadData:", err);
-        tbody.innerHTML = '<tr><td
+        tbody.innerHTML = '<tr><td colspan="11" class="text-center p-4 text-red-500">Gagal memuat data. Periksa URL Apps Script/Koneksi.</td></tr>';
+      }
+    }
+
+    function renderTableData(data) {
+      const tbody = document.getElementById("tableBody");
+      tbody.innerHTML = "";
+      
+      const reversed = [...data].reverse();
+      reversed.forEach(row => {
+        const tr = document.createElement("tr");
+        tr.className = "border-b hover:bg-gray-50";
+
+        let badgeBg = "bg-gray-500";
+        const st = (row.status || "Pending").trim();
+        if (st === "In Progress") badgeBg = "bg-yellow-500";
+        if (st === "Hold") badgeBg = "bg-orange-600";
+        if (st === "Completed") badgeBg = "bg-green-600";
+
+        tr.innerHTML = 
+          '<td class="p-3 text-sm font-mono">' + (row.id || '-') + '</td>' +
+          '<td class="p-3 text-sm">' + (row.tanggal || '-') + '</td>' +
+          '<td class="p-3 text-sm">' + (row.pelapor || '-') + '</td>' +
+          '<td class="p-3 text-sm">' + (row.lokasi || '-') + '</td>' +
+          '<td class="p-3 text-sm">' + (row.deskripsi || '-') + '</td>' +
+          '<td class="p-3 text-sm font-semibold">' + (row.prioritas || '-') + '</td>' +
+          '<td class="p-3 text-sm"><span class="px-2 py-1 rounded text-xs text-white ' + badgeBg + '">' + st + '</span></td>' +
+          '<td class="p-3 text-sm font-medium text-blue-600">' + (row.pic || '-') + '</td>' +
+          '<td class="p-3 text-sm text-purple-600 font-medium">' + (row.timeSolving || '-') + '</td>' +
+          '<td class="p-3 text-sm text-gray-600 italic">' + (row.remark || '-') + '</td>' +
+          '<td class="p-3 text-sm flex gap-1">' +
+            '<button onclick="updateStatus(\'' + row.id + '\', \'In Progress\', \'' + (row.pic || '') + '\', \'' + (row.timeSolving || '') + '\', \'' + (row.remark || '') + '\')" class="bg-yellow-500 text-white px-2 py-1 rounded text-xs hover:bg-yellow-600">Proses</button>' +
+            '<button onclick="updateStatus(\'' + row.id + '\', \'Hold\', \'' + (row.pic || '') + '\', \'' + (row.timeSolving || '') + '\', \'' + (row.remark || '') + '\')" class="bg-orange-600 text-white px-2 py-1 rounded text-xs hover:bg-orange-700">Hold</button>' +
+            '<button onclick="updateStatus(\'' + row.id + '\', \'Completed\', \'' + (row.pic || '') + '\', \'' + (row.timeSolving || '') + '\', \'' + (row.remark || '') + '\')" class="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700">Selesai</button>' +
+          '</td>';
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function submitWO(e) {
+      e.preventDefault();
+      
+      const btn = document.getElementById("btnSubmit");
+      btn.innerText = "Mengirim...";
+      btn.disabled = true;
+
+      const payload = {
+        action: "create",
+        pelapor: document.getElementById("pelapor").value,
+        lokasi: document.getElementById("lokasi").value,
+        deskripsi: document.getElementById("deskripsi").value,
+        prioritas: document.getElementById("prioritas").value
+      };
+
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams(payload)
+        });
+
+        document.getElementById("woForm").reset();
+        alert("Work Order berhasil dikirim!");
+        setTimeout(loadData, 2000);
+      } catch (err) {
+        alert("Gagal mengirim Work Order: " + err);
+      } finally {
+        btn.innerText = "Kirim Work Order";
+        btn.disabled = false;
+      }
+    }
+
+    async function updateStatus(id, newStatus, currentPic, currentTimeSolving, currentRemark) {
+      const inputPassword = prompt('Aksi Admin [Ubah Status ke "' + newStatus + '"]: Masukkan Password Admin:');
+      if (inputPassword === null) return;
+
+      if (inputPassword !== ADMIN_PASSWORD) {
+        alert("Password Admin Salah! Akses ditolak.");
+        return;
+      }
+
+      let inputPic = currentPic || '-';
+      let inputTime = currentTimeSolving || '-';
+      let inputRemark = currentRemark || '-';
+
+      if (newStatus === "In Progress") {
+        const picVal = prompt('Masukkan Nama PIC / Teknisi yang mengerjakan:', currentPic !== '-' ? currentPic : '');
+        if (picVal === null) return;
+        inputPic = picVal || '-';
+      } 
+      else if (newStatus === "Hold") {
+        const remarkVal = prompt('Masukkan Remark Permasalahan / Alasan Hold:', currentRemark !== '-' ? currentRemark : '');
+        if (remarkVal === null) return;
+        inputRemark = remarkVal || '-';
+      } 
+      else if (newStatus === "Completed") {
+        const timeVal = prompt('Masukkan Waktu Penyelesaian (Time Solving), misal "2 Jam" / "45 Menit":', currentTimeSolving !== '-' ? currentTimeSolving : '');
+        if (timeVal === null) return;
+        inputTime = timeVal || '-';
+      }
+
+      if (!confirm('Konfirmasi ubah status Work Order ' + id + ' menjadi "' + newStatus + '"?')) return;
+
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ 
+            action: "updateStatus", 
+            id: id, 
+            status: newStatus,
+            pic: inputPic,
+            timeSolving: inputTime,
+            remark: inputRemark
+          })
+        });
+
+        alert("Status Work Order berhasil diperbarui!");
+        setTimeout(loadData, 2000);
+      } catch (err) {
+        alert("Gagal memperbarui status: " + err);
+      }
+    }
+
+    function openReportModal() {
+      const now = new Date();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      document.getElementById("reportMonth").value = `${now.getFullYear()}-${m}`;
+      document.getElementById("reportModal").classList.remove("hidden");
+    }
+
+    function closeReportModal() {
+      document.getElementById("reportModal").classList.add("hidden");
+    }
+
+    function generateReport() {
+      const monthVal = document.getElementById("reportMonth").value;
+      const adminName = document.getElementById("adminName").value || "Admin Maintenance";
+      const managerName = document.getElementById("managerName").value || "Head Department / Manager";
+
+      if (!monthVal) {
+        alert("Pilih bulan dan tahun terlebih dahulu.");
+        return;
+      }
+
+      const [year, month] = monthVal.split('-');
+      
+      const monthlyData = globalWOData.filter(row => {
+        if (!row.tanggal) return false;
+        const d = new Date(row.tanggal);
+        if (isNaN(d.getTime())) return true;
+        return d.getFullYear() == parseInt(year) && (d.getMonth() + 1) == parseInt(month);
+      });
+
+      const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+      const periodTitle = monthNames[parseInt(month) - 1] + " " + year;
+
+      const totalWO = monthlyData.length;
+      const completedWO = monthlyData.filter(r => (r.status || '').trim() === 'Completed').length;
+      const progressWO = monthlyData.filter(r => (r.status || '').trim() === 'In Progress').length;
+      const holdWO = monthlyData.filter(r => (r.status || '').trim() === 'Hold').length;
+      const pendingWO = monthlyData.filter(r => (r.status || '').trim() === 'Pending' || !r.status).length;
+      const completionRate = totalWO > 0 ? ((completedWO / totalWO) * 100).toFixed(1) : 0;
+
+      let rowsHTML = "";
+      monthlyData.forEach((item, index) => {
+        const st = (item.status || 'Pending').trim();
+        let statusColor = "#555";
+        if (st === "Completed") statusColor = "green";
+        if (st === "In Progress") statusColor = "#d97706";
+        if (st === "Hold") statusColor = "#dc2626";
+
+        rowsHTML += 
+          '<tr style="border-bottom: 1px solid #ddd;">' +
+            '<td style="padding: 6px;">' + (index + 1) + '</td>' +
+            '<td style="padding: 6px;">' + (item.id || '-') + '</td>' +
+            '<td style="padding: 6px;">' + (item.tanggal || '-') + '</td>' +
+            '<td style="padding: 6px;">' + (item.pelapor || '-') + '</td>' +
+            '<td style="padding: 6px;">' + (item.lokasi || '-') + '</td>' +
+            '<td style="padding: 6px;">' + (item.deskripsi || '-') + '</td>' +
+            '<td style="padding: 6px;">' + (item.prioritas || '-') + '</td>' +
+            '<td style="padding: 6px; font-weight: bold; color: ' + statusColor + ';">' + st + '</td>' +
+            '<td style="padding: 6px; color: #2563eb;">' + (item.pic || '-') + '</td>' +
+            '<td style="padding: 6px; color: #7c3aed;">' + (item.timeSolving || '-') + '</td>' +
+            '<td style="padding: 6px; font-style: italic; color: #444;">' + (item.remark || '-') + '</td>' +
+          '</tr>';
+      });
+
+      if (monthlyData.length === 0) {
+        rowsHTML = '<tr><td colspan="11" style="text-align: center; padding: 15px; color: #777;">Tidak ada data Work Order pada periode ini.</td></tr>';
+      }
+
+      const reportHTML = 
+        '<!DOCTYPE html>' +
+        '<html>' +
+        '<head>' +
+          '<title>Laporan Work Order - ' + periodTitle + '</title>' +
+          '<style>' +
+            'body { font-family: Arial, sans-serif; padding: 20px; color: #333; }' +
+            'h1, h2, h3 { margin: 4px 0; }' +
+            '.kpi-container { display: flex; gap: 10px; margin: 15px 0; }' +
+            '.kpi-card { flex: 1; border: 1px solid #ccc; padding: 10px; border-radius: 6px; text-align: center; background: #f9f9f9; }' +
+            '.kpi-card h4 { margin: 0; color: #666; font-size: 11px; }' +
+            '.kpi-card p { margin: 4px 0 0 0; font-size: 18px; font-weight: bold; }' +
+            'table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; }' +
+            'th { background-color: #f2f2f2; padding: 6px; border-bottom: 2px solid #ccc; text-align: left; }' +
+            '.signature-area { margin-top: 35px; display: flex; justify-content: space-between; page-break-inside: avoid; }' +
+            '.sig-box { width: 40%; text-align: center; }' +
+            '.btn-print { background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-bottom: 15px; }' +
+            '@media print { .btn-print { display: none; } }' +
+          '</style>' +
+        '</head>' +
+        '<body>' +
+          '<button class="btn-print" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>' +
+          '<div style="border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 15px;">' +
+            '<h1>LAPORAN REKAPITULASI WORK ORDER</h1>' +
+            '<h3>Periode: ' + periodTitle + '</h3>' +
+          '</div>' +
+          '<div class="kpi-container">' +
+            '<div class="kpi-card"><h4>TOTAL WO BULAN INI</h4><p>' + totalWO + '</p></div>' +
+            '<div class="kpi-card"><h4>SELESAI</h4><p style="color: green;">' + completedWO + '</p></div>' +
+            '<div class="kpi-card"><h4>PROSES</h4><p style="color: #d97706;">' + progressWO + '</p></div>' +
+            '<div class="kpi-card"><h4>HOLD</h4><p style="color: #dc2626;">' + holdWO + '</p></div>' +
+            '<div class="kpi-card"><h4>PENDING</h4><p style="color: gray;">' + pendingWO + '</p></div>' +
+            '<div class="kpi-card"><h4>% SELESAI</h4><p style="color: blue;">' + completionRate + '%</p></div>' +
+          '</div>' +
+          '<h3>Daftar Detail Pekerjaan</h3>' +
+          '<table>' +
+            '<thead>' +
+              '<tr>' +
+                '<th>No</th>' +
+                '<th>ID Work Order</th>' +
+                '<th>Tanggal</th>' +
+                '<th>Pelapor</th>' +
+                '<th>Lokasi</th>' +
+                '<th>Deskripsi</th>' +
+                '<th>Prioritas</th>' +
+                '<th>Status</th>' +
+                '<th>PIC Teknisi</th>' +
+                '<th>Time Solving</th>' +
+                '<th>Remark</th>' +
+              '</tr>' +
+            '</thead>' +
+            '<tbody>' +
+              rowsHTML +
+            '</tbody>' +
+          '</table>' +
+          '<div class="signature-area">' +
+            '<div class="sig-box">' +
+              '<p>Dibuat Oleh,</p><br><br><br>' +
+              '<p><b><u>' + adminName + '</u></b><br>Admin Maintenance</p>' +
+            '</div>' +
+            '<div class="sig-box">' +
+              '<p>Disetujui Oleh,</p><br><br><br>' +
+              '<p><b><u>' + managerName + '</u></b><br>Manager / Head Department</p>' +
+            '</div>' +
+          '</div>' +
+        '</body>' +
+        '</html>';
+
+      const printWin = window.open('', '_blank');
+      printWin.document.write(reportHTML);
+      printWin.document.close();
+      closeReportModal();
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
