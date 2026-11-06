@@ -10,68 +10,59 @@
 
   <script>
     // URL GOOGLE APPS SCRIPT
-    const API_URL = "https://script.google.com/macros/s/AKfycbyZQB7-ZnrBcpjwE8IJI-lDPcUl9g8VU5lo2XJ-Gg-KM-ynfB5AjwkU1buJxm7TLVREhw/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwh3wFbBrSFmdqxaHbukuNd1jJtzw78_rHHjnCcV88ZiRWMCnAIT4SQqBUCYqqzlv-8rA/exec";
     
     // PASSWORD ADMIN UNTUK AKSI STATUS
     const ADMIN_PASSWORD = "admin2026";
-
-    // LOGO ASTON TANJUNG PINANG
-    const ASTON_LOGO_SVG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 450 200'><text x='10' y='110' font-family='Arial, sans-serif' font-size='110' font-weight='bold' fill='%23052855' letter-spacing='4'>ASTON</text><text x='15' y='145' font-family='Arial, sans-serif' font-size='22' font-weight='normal' fill='%23777777' letter-spacing='3'>TANJUNG PINANG</text><text x='15' y='175' font-family='Arial, sans-serif' font-size='16' font-weight='normal' fill='%23888888' letter-spacing='2'>HOTEL %26 CONFERENCE CENTER</text></svg>";
   </script>
 
   <div class="max-w-7xl mx-auto space-y-8">
-    <!-- Header Utama Dengan Judul Baru & Logo ASTON -->
-    <div class="bg-white p-6 rounded-lg shadow-md flex flex-col md:flex-row items-center justify-between gap-4">
-      <div class="flex items-center space-x-4">
-        <img id="mainLogo" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 450 200'><text x='10' y='110' font-family='Arial, sans-serif' font-size='110' font-weight='bold' fill='%23052855' letter-spacing='4'>ASTON</text><text x='15' y='145' font-family='Arial, sans-serif' font-size='22' font-weight='normal' fill='%23777777' letter-spacing='3'>TANJUNG PINANG</text><text x='15' y='175' font-family='Arial, sans-serif' font-size='16' font-weight='normal' fill='%23888888' letter-spacing='2'>HOTEL %26 CONFERENCE CENTER</text></svg>" alt="Aston Tanjung Pinang Logo" class="h-16 md:h-20 object-contain">
-        <div>
-          <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Sistem Work Order Aston Tanjungpinang</h1>
-          <p class="text-sm text-gray-500 font-medium">ASTON Tanjung Pinang Hotel & Conference Center</p>
-        </div>
-      </div>
-      <div class="flex space-x-2">
-        <button onclick="openReportModal()" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 text-sm font-semibold shadow">
-          📄 Cetak Laporan Bulanan
-        </button>
-        <button onclick="loadData()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 text-sm font-semibold">
-          Refresh Data
-        </button>
-      </div>
-    </div>
+    <!-- Judul Utama Halaman Awal -->
+    <h1 class="text-3xl font-bold text-center text-gray-800">Sistem Work Order Aston Tanjungpinang</h1>
 
     <!-- Form Input Work Order -->
     <div class="bg-white p-6 rounded-lg shadow-md">
-      <h2 class="text-xl font-semibold mb-4 text-gray-700 border-b pb-2">Buat Work Order Baru</h2>
+      <h2 class="text-xl font-semibold mb-4 text-gray-700">Buat Work Order Baru</h2>
       <form id="woForm" onsubmit="submitWO(event)" class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700">Nama Pelapor</label>
-            <input type="text" id="pelapor" required class="w-full mt-1 p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500">
+            <input type="text" id="pelapor" required class="w-full mt-1 p-2 border rounded-md">
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700">Lokasi / Ruangan</label>
-            <input type="text" id="lokasi" required class="w-full mt-1 p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500">
+            <input type="text" id="lokasi" required class="w-full mt-1 p-2 border rounded-md">
           </div>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700">Deskripsi Masalah / Pekerjaan</label>
-          <textarea id="deskripsi" required class="w-full mt-1 p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500" rows="3"></textarea>
+          <textarea id="deskripsi" required class="w-full mt-1 p-2 border rounded-md" rows="3"></textarea>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700">Tingkat Prioritas</label>
-          <select id="prioritas" class="w-full mt-1 p-2 border rounded-md focus:ring-blue-500 focus:border-blue-500">
+          <select id="prioritas" class="w-full mt-1 p-2 border rounded-md">
             <option value="Rendah">Rendah</option>
             <option value="Sedang">Sedang</option>
             <option value="Tinggi">Tinggi</option>
           </select>
         </div>
-        <button type="submit" id="btnSubmit" class="w-full bg-blue-600 text-white py-2.5 rounded-md hover:bg-blue-700 font-semibold shadow">Kirim Work Order</button>
+        <button type="submit" id="btnSubmit" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 font-medium">Kirim Work Order</button>
       </form>
     </div>
 
-    <!-- Dashboard Status Admin -->
+    <!-- Dashboard Status Admin & Fitur Laporan -->
     <div class="bg-white p-6 rounded-lg shadow-md">
-      <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Daftar Work Order</h2>
+      <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-2">
+        <h2 class="text-xl font-semibold text-gray-700">Daftar Work Order</h2>
+        <div class="flex space-x-2">
+          <button onclick="openReportModal()" class="bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700 text-sm font-medium">
+            📄 Cetak Laporan Bulanan
+          </button>
+          <button onclick="loadData()" class="bg-gray-200 text-gray-700 px-3 py-1.5 rounded hover:bg-gray-300 text-sm font-medium">
+            Refresh Data
+          </button>
+        </div>
+      </div>
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
           <thead>
@@ -345,8 +336,7 @@
           <style>
             body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
             h1, h2, h3 { margin: 2px 0; }
-            .header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 15px; }
-            .logo-report { height: 60px; object-fit: contain; }
+            .header-flex { border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 15px; }
             .kpi-container { display: flex; gap: 10px; margin: 15px 0; }
             .kpi-card { 
               flex: 1; border: 1px solid #ccc; padding: 10px; border-radius: 6px; 
@@ -373,15 +363,10 @@
           <button class="btn-print" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>
           
           <div class="header-flex">
-            <div>
-              <h1>LAPORAN REKAPITULASI WORK ORDER</h1>
-              <h3 style="color: #555;">ASTON Tanjung Pinang Hotel & Conference Center</h3>
-              <p style="margin: 4px 0 0 0; font-size: 13px;"><b>Periode:</b> ${periodTitle}</p>
-              <h4 id="filterTitleLabel" style="color: #2563eb; margin-top: 4px;">Kriteria Filter: Semua Status</h4>
-            </div>
-            <div>
-              <img src="${ASTON_LOGO_SVG}" alt="Aston Tanjung Pinang" class="logo-report">
-            </div>
+            <h1>LAPORAN REKAPITULASI WORK ORDER</h1>
+            <h3 style="color: #555;">ASTON Tanjung Pinang Hotel & Conference Center</h3>
+            <p style="margin: 4px 0 0 0; font-size: 13px;"><b>Periode:</b> ${periodTitle}</p>
+            <h4 id="filterTitleLabel" style="color: #2563eb; margin-top: 4px;">Kriteria Filter: Semua Status</h4>
           </div>
 
           <div class="kpi-container">
