@@ -207,6 +207,7 @@
     }
 
     async function updateStatus(id, newStatus, currentPic, currentTimeSolving, currentRemark) {
+      // 1. Verifikasi Password Admin
       const inputPassword = prompt('Aksi Admin [Ubah Status ke "' + newStatus + '"]: Masukkan Password Admin:');
       if (inputPassword === null) return;
 
@@ -215,17 +216,29 @@
         return;
       }
 
-      // Input Nama PIC
-      const inputPic = prompt('Masukkan Nama PIC / Teknisi yang mengerjakan:', currentPic !== '-' ? currentPic : '');
-      if (inputPic === null) return;
+      let inputPic = currentPic || '-';
+      let inputTime = currentTimeSolving || '-';
+      let inputRemark = currentRemark || '-';
 
-      // Input Time Solving
-      const inputTime = prompt('Masukkan Waktu Penyelesaian (Time Solving), misal "2 Jam" / "45 Menit":', currentTimeSolving !== '-' ? currentTimeSolving : '');
-      if (inputTime === null) return;
-
-      // Input Remark (Terutama penting jika Hold)
-      const inputRemark = prompt('Masukkan Remark / Catatan (Alasan Hold / Keterangan):', currentRemark !== '-' ? currentRemark : '');
-      if (inputRemark === null) return;
+      // 2. Alur Input Spesifik Sesuai Status yang Diklik
+      if (newStatus === "In Progress") {
+        // Klik Proses: Hanya Minta Input PIC
+        const picVal = prompt('Masukkan Nama PIC / Teknisi yang mengerjakan:', currentPic !== '-' ? currentPic : '');
+        if (picVal === null) return;
+        inputPic = picVal || '-';
+      } 
+      else if (newStatus === "Hold") {
+        // Klik Hold: Hanya Minta Input Remark (Permasalahan/Alasan Hold)
+        const remarkVal = prompt('Masukkan Remark Permasalahan / Alasan Hold:', currentRemark !== '-' ? currentRemark : '');
+        if (remarkVal === null) return;
+        inputRemark = remarkVal || '-';
+      } 
+      else if (newStatus === "Completed") {
+        // Klik Selesai: Hanya Minta Input Time Solving
+        const timeVal = prompt('Masukkan Waktu Penyelesaian (Time Solving), misal "2 Jam" / "45 Menit":', currentTimeSolving !== '-' ? currentTimeSolving : '');
+        if (timeVal === null) return;
+        inputTime = timeVal || '-';
+      }
 
       if (!confirm('Konfirmasi ubah status Work Order ' + id + ' menjadi "' + newStatus + '"?')) return;
 
@@ -238,13 +251,13 @@
             action: "updateStatus", 
             id: id, 
             status: newStatus,
-            pic: inputPic || '-',
-            timeSolving: inputTime || '-',
-            remark: inputRemark || '-'
+            pic: inputPic,
+            timeSolving: inputTime,
+            remark: inputRemark
           })
         });
 
-        alert("Status, PIC, Time Solving, dan Remark berhasil diperbarui!");
+        alert("Status Work Order berhasil diperbarui!");
         setTimeout(loadData, 2000);
       } catch (err) {
         alert("Gagal memperbarui status: " + err);
