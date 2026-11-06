@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistem Work Order Internal</title>
+  <title>Sistem Work Order AstonTanjungpinang</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-4 md:p-8">
 
   <script>
     // URL GOOGLE APPS SCRIPT
-    const API_URL = "https://script.google.com/macros/s/AKfycbwKSWi0cRAuO5sJx0SBtsui3YTor_LSRTQ4KN5RCJOQpP9Cmv4T79F8_6EehDbhFBrSNQ/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbxPHuRJ24zd1Q3ukIKNMQOizALFpbqwunYbdOfQX1cwFrrKJw67JNVjaKIpyVlbqC-rXw/exec";
     
     // PASSWORD ADMIN UNTUK AKSI STATUS
     const ADMIN_PASSWORD = "admin2026";
@@ -94,17 +94,6 @@
       <div>
         <label class="block text-sm font-medium text-gray-700">Pilih Bulan & Tahun</label>
         <input type="month" id="reportMonth" class="w-full mt-1 p-2 border rounded-md">
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Filter Status Pekerjaan</label>
-        <select id="reportStatusFilter" class="w-full mt-1 p-2 border rounded-md font-medium text-gray-800">
-          <option value="ALL">Semua Status (Laporan Lengkap Ops)</option>
-          <option value="In Progress">Khusus Status: In Progress (Dalam Proses)</option>
-          <option value="Hold">Khusus Status: Hold (Dihentikan Sementara)</option>
-          <option value="Pending">Khusus Status: Pending (Belum Diproses)</option>
-          <option value="Completed">Khusus Status: Completed (Selesai)</option>
-          <option value="OUTSTANDING">Gabungan Outstanding (Pending, In Progress & Hold)</option>
-        </select>
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700">Nama Admin / Pembuat Laporan</label>
@@ -218,6 +207,7 @@
     }
 
     async function updateStatus(id, newStatus, currentPic, currentTimeSolving, currentRemark) {
+      // 1. Verifikasi Password Admin
       const inputPassword = prompt('Aksi Admin [Ubah Status ke "' + newStatus + '"]: Masukkan Password Admin:');
       if (inputPassword === null) return;
 
@@ -230,17 +220,21 @@
       let inputTime = currentTimeSolving || '-';
       let inputRemark = currentRemark || '-';
 
+      // 2. Alur Input Spesifik Sesuai Status yang Diklik
       if (newStatus === "In Progress") {
+        // Klik Proses: Hanya Minta Input PIC
         const picVal = prompt('Masukkan Nama PIC / Teknisi yang mengerjakan:', currentPic !== '-' ? currentPic : '');
         if (picVal === null) return;
         inputPic = picVal || '-';
       } 
       else if (newStatus === "Hold") {
+        // Klik Hold: Hanya Minta Input Remark (Permasalahan/Alasan Hold)
         const remarkVal = prompt('Masukkan Remark Permasalahan / Alasan Hold:', currentRemark !== '-' ? currentRemark : '');
         if (remarkVal === null) return;
         inputRemark = remarkVal || '-';
       } 
       else if (newStatus === "Completed") {
+        // Klik Selesai: Hanya Minta Input Time Solving
         const timeVal = prompt('Masukkan Waktu Penyelesaian (Time Solving), misal "2 Jam" / "45 Menit":', currentTimeSolving !== '-' ? currentTimeSolving : '');
         if (timeVal === null) return;
         inputTime = timeVal || '-';
@@ -283,7 +277,6 @@
 
     function generateReport() {
       const monthVal = document.getElementById("reportMonth").value;
-      const filterOpt = document.getElementById("reportStatusFilter").value;
       const adminName = document.getElementById("adminName").value || "Admin Maintenance";
       const managerName = document.getElementById("managerName").value || "Head Department / Manager";
 
@@ -294,81 +287,43 @@
 
       const [year, month] = monthVal.split('-');
       
-      // 1. Filter Data Berdasarkan Bulan & Tahun
-      const monthlyData = globalWOData.filter(row => {
+      const filteredData = globalWOData.filter(row => {
         if (!row.tanggal) return false;
         const d = new Date(row.tanggal);
         if (isNaN(d.getTime())) return true;
         return d.getFullYear() == parseInt(year) && (d.getMonth() + 1) == parseInt(month);
       });
 
-      // 2. Ringkasan Statistik KPI Keseluruhan Bulan Ini
-      const totalWO = monthlyData.length;
-      const completedWO = monthlyData.filter(r => (r.status || '').trim() === 'Completed').length;
-      const progressWO = monthlyData.filter(r => (r.status || '').trim() === 'In Progress').length;
-      const holdWO = monthlyData.filter(r => (r.status || '').trim() === 'Hold').length;
-      const pendingWO = monthlyData.filter(r => (r.status || '').trim() === 'Pending' || !r.status).length;
+      const totalWO = filteredData.length;
+      const completedWO = filteredData.filter(r => (r.status || '').trim() === 'Completed').length;
+      const progressWO = filteredData.filter(r => (r.status || '').trim() === 'In Progress').length;
+      const holdWO = filteredData.filter(r => (r.status || '').trim() === 'Hold').length;
+      const pendingWO = filteredData.filter(r => (r.status || '').trim() === 'Pending' || !r.status).length;
       const completionRate = totalWO > 0 ? ((completedWO / totalWO) * 100).toFixed(1) : 0;
-
-      // 3. Penyaringan Eksklusif Sesuai Pilihan Filter Dropdown
-      let filteredData = [];
-      let filterLabel = "";
-
-      if (filterOpt === "In Progress") {
-        filteredData = monthlyData.filter(r => (r.status || '').trim() === 'In Progress');
-        filterLabel = "Khusus Status: In Progress (Dalam Proses)";
-      } 
-      else if (filterOpt === "Hold") {
-        filteredData = monthlyData.filter(r => (r.status || '').trim() === 'Hold');
-        filterLabel = "Khusus Status: Hold (Dihentikan Sementara)";
-      } 
-      else if (filterOpt === "Pending") {
-        filteredData = monthlyData.filter(r => (r.status || '').trim() === 'Pending' || !r.status);
-        filterLabel = "Khusus Status: Pending (Belum Diproses)";
-      } 
-      else if (filterOpt === "Completed") {
-        filteredData = monthlyData.filter(r => (r.status || '').trim() === 'Completed');
-        filterLabel = "Khusus Status: Completed (Selesai)";
-      } 
-      else if (filterOpt === "OUTSTANDING") {
-        filteredData = monthlyData.filter(r => (r.status || '').trim() !== 'Completed');
-        filterLabel = "Gabungan Outstanding (Pending, In Progress & Hold)";
-      } 
-      else {
-        filteredData = monthlyData;
-        filterLabel = "Semua Status (Laporan Lengkap Operasional)";
-      }
 
       const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
       const periodTitle = monthNames[parseInt(month) - 1] + " " + year;
 
-      // 4. Pembentukan Baris Tabel PDF
       let rowsHTML = "";
       filteredData.forEach((item, index) => {
-        const st = (item.status || 'Pending').trim();
-        let statusColor = "#555";
-        if (st === "Completed") statusColor = "green";
-        if (st === "In Progress") statusColor = "#d97706";
-        if (st === "Hold") statusColor = "#dc2626";
-
         rowsHTML += 
           '<tr style="border-bottom: 1px solid #ddd;">' +
-            '<td style="padding: 6px;">' + (index + 1) + '</td>' +
-            '<td style="padding: 6px;">' + (item.id || '-') + '</td>' +
-            '<td style="padding: 6px;">' + (item.tanggal || '-') + '</td>' +
-            '<td style="padding: 6px;">' + (item.pelapor || '-') + '</td>' +
-            '<td style="padding: 6px;">' + (item.lokasi || '-') + '</td>' +
-            '<td style="padding: 6px;">' + (item.deskripsi || '-') + '</td>' +
-            '<td style="padding: 6px;">' + (item.prioritas || '-') + '</td>' +
-            '<td style="padding: 6px; font-weight: bold; color: ' + statusColor + ';">' + st + '</td>' +
-            '<td style="padding: 6px; color: #2563eb;">' + (item.pic || '-') + '</td>' +
-            '<td style="padding: 6px; color: #7c3aed;">' + (item.timeSolving || '-') + '</td>' +
-            '<td style="padding: 6px; font-style: italic; color: #444;">' + (item.remark || '-') + '</td>' +
+            '<td style="padding: 8px;">' + (index + 1) + '</td>' +
+            '<td style="padding: 8px;">' + (item.id || '-') + '</td>' +
+            '<td style="padding: 8px;">' + (item.tanggal || '-') + '</td>' +
+            '<td style="padding: 8px;">' + (item.pelapor || '-') + '</td>' +
+            '<td style="padding: 8px;">' + (item.lokasi || '-') + '</td>' +
+            '<td style="padding: 8px;">' + (item.deskripsi || '-') + '</td>' +
+            '<td style="padding: 8px;">' + (item.prioritas || '-') + '</td>' +
+            '<td style="padding: 8px; font-weight: bold;">' + (item.status || 'Pending') + '</td>' +
+            '<td style="padding: 8px; color: #2563eb;">' + (item.pic || '-') + '</td>' +
+            '<td style="padding: 8px; color: #7c3aed;">' + (item.timeSolving || '-') + '</td>' +
+            '<td style="padding: 8px; font-style: italic; color: #555;">' + (item.remark || '-') + '</td>' +
           '</tr>';
       });
 
       if (filteredData.length === 0) {
-        rowsHTML = '<tr><td colspan="11" style="text-align: center; padding: 15px; color: #777;">Tidak ada data Work Order yang sesuai dengan kriteria filter "' + filterLabel + '".</td></tr>';
+        rowsHTML = '<tr><td colspan="11" style="text-align: center; padding: 15px; color: #777;">Tidak ada data Work Order pada periode ini.</td></tr>';
       }
 
       const reportHTML = 
@@ -378,35 +333,34 @@
           '<title>Laporan Work Order - ' + periodTitle + '</title>' +
           '<style>' +
             'body { font-family: Arial, sans-serif; padding: 20px; color: #333; }' +
-            'h1, h2, h3 { margin: 4px 0; }' +
-            '.kpi-container { display: flex; gap: 8px; margin: 15px 0; }' +
-            '.kpi-card { flex: 1; border: 1px solid #ccc; padding: 8px; border-radius: 6px; text-align: center; background: #f9f9f9; }' +
-            '.kpi-card h4 { margin: 0; color: #666; font-size: 10px; }' +
-            '.kpi-card p { margin: 4px 0 0 0; font-size: 16px; font-weight: bold; }' +
-            'table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; }' +
+            'h1, h2, h3 { margin: 5px 0; }' +
+            '.kpi-container { display: flex; gap: 10px; margin: 20px 0; }' +
+            '.kpi-card { flex: 1; border: 1px solid #ccc; padding: 10px; border-radius: 6px; text-align: center; background: #f9f9f9; }' +
+            '.kpi-card h4 { margin: 0; color: #666; font-size: 11px; }' +
+            '.kpi-card p { margin: 5px 0 0 0; font-size: 18px; font-weight: bold; }' +
+            'table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 10px; }' +
             'th { background-color: #f2f2f2; padding: 6px; border-bottom: 2px solid #ccc; text-align: left; }' +
-            '.signature-area { margin-top: 35px; display: flex; justify-content: space-between; page-break-inside: avoid; }' +
+            '.signature-area { margin-top: 40px; display: flex; justify-content: space-between; page-break-inside: avoid; }' +
             '.sig-box { width: 40%; text-align: center; }' +
-            '.btn-print { background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-bottom: 15px; }' +
+            '.btn-print { background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-bottom: 20px; }' +
             '@media print { .btn-print { display: none; } }' +
           '</style>' +
         '</head>' +
         '<body>' +
           '<button class="btn-print" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>' +
-          '<div style="border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 15px;">' +
+          '<div style="border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px;">' +
             '<h1>LAPORAN REKAPITULASI WORK ORDER</h1>' +
             '<h3>Periode: ' + periodTitle + '</h3>' +
-            '<h4 style="color: #2563eb; margin-top: 4px;">Kriteria Filter: ' + filterLabel + ' (Total Data Tampil: ' + filteredData.length + ')</h4>' +
           '</div>' +
           '<div class="kpi-container">' +
-            '<div class="kpi-card"><h4>TOTAL WO BULAN INI</h4><p>' + totalWO + '</p></div>' +
+            '<div class="kpi-card"><h4>TOTAL WO</h4><p>' + totalWO + '</p></div>' +
             '<div class="kpi-card"><h4>SELESAI</h4><p style="color: green;">' + completedWO + '</p></div>' +
-            '<div class="kpi-card"><h4>PROSES</h4><p style="color: #d97706;">' + progressWO + '</p></div>' +
-            '<div class="kpi-card"><h4>HOLD</h4><p style="color: #dc2626;">' + holdWO + '</p></div>' +
+            '<div class="kpi-card"><h4>PROSES</h4><p style="color: orange;">' + progressWO + '</p></div>' +
+            '<div class="kpi-card"><h4>HOLD</h4><p style="color: #d97706;">' + holdWO + '</p></div>' +
             '<div class="kpi-card"><h4>PENDING</h4><p style="color: gray;">' + pendingWO + '</p></div>' +
             '<div class="kpi-card"><h4>% SELESAI</h4><p style="color: blue;">' + completionRate + '%</p></div>' +
           '</div>' +
-          '<h3>Daftar Detail Pekerjaan Terfilter</h3>' +
+          '<h3>Daftar Detail Pekerjaan</h3>' +
           '<table>' +
             '<thead>' +
               '<tr>' +
