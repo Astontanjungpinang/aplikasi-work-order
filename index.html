@@ -10,7 +10,7 @@
 
   <script>
     // MASUKKAN URL GOOGLE APPS SCRIPT KAMU DI SINI
-    const API_URL = "https://script.google.com/macros/s/AKfycbzY3RWYoYPmoTm9EbQth57_191JTE2tADs7K59ZSuaiH8G5MrT5p78VYJTFk3hTRqNXGQ/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbyPPHXrj3ZTlRTsIZSWy5FIiC1EE2qTgDNDqKo22u0fItmG-NzBpI53ePJsHuf6ZnCjLA/exec";
   </script>
 
   <div class="max-w-5xl mx-auto space-y-8">
@@ -42,4 +42,26 @@
             <option value="Tinggi">Tinggi</option>
           </select>
         </div>
-        <button type="submit" id="btnSubmit" class="w-full bg-blue-
+        <button type="submit" id="btnSubmit" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 font-medium">Kirim Work Order</button>
+      </form>
+    </div>
+
+    <!-- Dashboard Status Admin & Fitur Laporan -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-2">
+        <h2 class="text-xl font-semibold text-gray-700">Daftar Work Order</h2>
+        <div class="flex space-x-2">
+          <button onclick="openReportModal()" class="bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700 text-sm font-medium flex items-center gap-1">
+            📄 Cetak Laporan Bulanan
+          </button>
+          <button onclick="loadData()" class="bg-gray-200 text-gray-700 px-3 py-1.5 rounded hover:bg-gray-300 text-sm font-medium">
+            Refresh Data
+          </button>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-gray-50 border-b">
+              <th class="p-3 text-sm font-semibold">ID</th>
+              <th class="p-3 text-sm font-semibold">Tanggal
