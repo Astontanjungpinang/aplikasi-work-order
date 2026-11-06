@@ -10,7 +10,10 @@
 
   <script>
     // URL GOOGLE APPS SCRIPT
-    const API_URL = "https://script.google.com/macros/s/AKfycbyCHUVtqTU60Yqv2Yip4svAy2bO6a3Sno4Gxagw8A9kvSHNVY9GH2szQkfHLIc1eHiuLg/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbxpaaH0V6znkCpSkna0lFfa5TGySNNkuFtIPd9pLZ60l5zAsKJVIycjAC9JeIZ3ElAL5w/exec";
+    
+    // PASSWORD ADMIN UNTUK AKSI PROSES/SELESAI
+    const ADMIN_PASSWORD = "admin26";
   </script>
 
   <div class="max-w-5xl mx-auto space-y-8">
@@ -194,7 +197,18 @@
     }
 
     async function updateStatus(id, newStatus) {
-      if (!confirm(`Ubah status Work Order ${id} menjadi "${newStatus}"?`)) return;
+      // 1. VERIFIKASI PASSWORD ADMIN
+      const inputPassword = prompt(`Aksi Admin [Ubah Status ke "${newStatus}"]: Masukkan Password Admin:`);
+      
+      if (inputPassword === null) return; // User menekan Batal
+
+      if (inputPassword !== ADMIN_PASSWORD) {
+        alert("Password Admin Salah! Akses ditolak.");
+        return;
+      }
+
+      // 2. KONFIRMASI DILANJUTKAN JIKA PASSWORD BENAR
+      if (!confirm(`Konfirmasi ubah status Work Order ${id} menjadi "${newStatus}"?`)) return;
 
       try {
         await fetch(API_URL, {
@@ -224,130 +238,4 @@
 
     function generateReport() {
       const monthVal = document.getElementById("reportMonth").value;
-      const adminName = document.getElementById("adminName").value || "Admin Maintenance";
-      const managerName = document.getElementById("managerName").value || "Head Department / Manager";
-
-      if (!monthVal) {
-        alert("Pilih bulan dan tahun terlebih dahulu.");
-        return;
-      }
-
-      const [year, month] = monthVal.split('-');
-      
-      const filteredData = globalWOData.filter(row => {
-        if (!row.tanggal) return false;
-        const d = new Date(row.tanggal);
-        if (isNaN(d.getTime())) return true;
-        return d.getFullYear() == parseInt(year) && (d.getMonth() + 1) == parseInt(month);
-      });
-
-      const totalWO = filteredData.length;
-      const completedWO = filteredData.filter(r => (r.status || '').trim() === 'Completed').length;
-      const progressWO = filteredData.filter(r => (r.status || '').trim() === 'In Progress').length;
-      const pendingWO = filteredData.filter(r => (r.status || '').trim() === 'Pending' || !r.status).length;
-      const completionRate = totalWO > 0 ? ((completedWO / totalWO) * 100).toFixed(1) : 0;
-
-      const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-      const periodTitle = `${monthNames[parseInt(month) - 1]} ${year}`;
-
-      let rowsHTML = "";
-      filteredData.forEach((item, index) => {
-        rowsHTML += `
-          <tr style="border-bottom: 1px solid #ddd;">
-            <td style="padding: 8px;">${index + 1}</td>
-            <td style="padding: 8px;">${item.id || '-'}</td>
-            <td style="padding: 8px;">${item.tanggal || '-'}</td>
-            <td style="padding: 8px;">${item.pelapor || '-'}</td>
-            <td style="padding: 8px;">${item.lokasi || '-'}</td>
-            <td style="padding: 8px;">${item.deskripsi || '-'}</td>
-            <td style="padding: 8px;">${item.prioritas || '-'}</td>
-            <td style="padding: 8px; font-weight: bold;">${item.status || 'Pending'}</td>
-          </tr>
-        `;
-      });
-
-      if (filteredData.length === 0) {
-        rowsHTML = `<tr><td colspan="8" style="text-align: center; padding: 15px; color: #777;">Tidak ada data Work Order pada periode ini.</td></tr>`;
-      }
-
-      const reportHTML = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Laporan Work Order - ${periodTitle}</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
-            h1, h2, h3 { margin: 5px 0; }
-            .kpi-container { display: flex; gap: 15px; margin: 20px 0; }
-            .kpi-card { flex: 1; border: 1px solid #ccc; padding: 12px; border-radius: 6px; text-align: center; background: #f9f9f9; }
-            .kpi-card h4 { margin: 0; color: #666; font-size: 13px; }
-            .kpi-card p { margin: 5px 0 0 0; font-size: 20px; font-weight: bold; }
-            table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
-            th { background-color: #f2f2f2; padding: 8px; border-bottom: 2px solid #ccc; text-align: left; }
-            .signature-area { margin-top: 40px; display: flex; justify-content: space-between; page-break-inside: avoid; }
-            .sig-box { width: 40%; text-align: center; }
-            .btn-print { background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-bottom: 20px; }
-            @media print { .btn-print { display: none; } }
-          </style>
-        </head>
-        <body>
-          <button class="btn-print" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>
-          
-          <div style="border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px;">
-            <h1>LAPORAN REKAPITULASI WORK ORDER</h1>
-            <h3>Periode: ${periodTitle}</h3>
-          </div>
-
-          <div class="kpi-container">
-            <div class="kpi-card"><h4>TOTAL WORK ORDER</h4><p>${totalWO}</p></div>
-            <div class="kpi-card"><h4>SELESAI (COMPLETED)</h4><p style="color: green;">${completedWO}</p></div>
-            <div class="kpi-card"><h4>DALAM PROSES</h4><p style="color: orange;">${progressWO}</p></div>
-            <div class="kpi-card"><h4>PENDING</h4><p style="color: gray;">${pendingWO}</p></div>
-            <div class="kpi-card"><h4>TINGKAT PENYELESAIAN</h4><p style="color: blue;">${completionRate}%</p></div>
-          </div>
-
-          <h3>Daftar Detail Pekerjaan</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>No</th>
-                <th>ID Work Order</th>
-                <th>Tanggal</th>
-                <th>Pelapor</th>
-                <th>Lokasi</th>
-                <th>Deskripsi</th>
-                <th>Prioritas</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rowsHTML}
-            </tbody>
-          </table>
-
-          <div class="signature-area">
-            <div class="sig-box">
-              <p>Dibuat Oleh,</p>
-              <br><br><br>
-              <p><b><u>${adminName}</u></b><br>Admin Maintenance</p>
-            </div>
-            <div class="sig-box">
-              <p>Disetujui Oleh,</p>
-              <br><br><br>
-              <p><b><u>${managerName}</u></b><br>Manager / Head Department</p>
-            </div>
-          </div>
-        </body>
-        </html>
-      `;
-
-      const printWin = window.open('', '_blank');
-      printWin.document.write(reportHTML);
-      printWin.document.close();
-      closeReportModal();
-    }
-
-    loadData();
-  </script>
-</body>
-</html>
+      const adminName = document.getElementById("adminName
