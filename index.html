@@ -10,9 +10,9 @@
 
   <script>
     // URL GOOGLE APPS SCRIPT
-    const API_URL = "https://script.google.com/macros/s/AKfycbxpaaH0V6znkCpSkna0lFfa5TGySNNkuFtIPd9pLZ60l5zAsKJVIycjAC9JeIZ3ElAL5w/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbxQJJXRSI71Hths8JbcAIgTxBT1_s2B7MK2HTPCIgLfMgXx3wLJt120mYImL8rSTgjkLw/exec";
     
-    // PASSWORD ADMIN UNTUK AKSI PROSES/SELESAI
+    // PASSWORD ADMIN UNTUK AKSI PROSES / SELESAI
     const ADMIN_PASSWORD = "admin2026";
   </script>
 
@@ -54,7 +54,7 @@
       <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-2">
         <h2 class="text-xl font-semibold text-gray-700">Daftar Work Order</h2>
         <div class="flex space-x-2">
-          <button onclick="openReportModal()" class="bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700 text-sm font-medium">
+          <button onclick="openReportModal()" class="bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700 text-sm font-medium flex items-center gap-1">
             📄 Cetak Laporan Bulanan
           </button>
           <button onclick="loadData()" class="bg-gray-200 text-gray-700 px-3 py-1.5 rounded hover:bg-gray-300 text-sm font-medium">
@@ -112,6 +112,7 @@
 
     async function loadData() {
       const tbody = document.getElementById("tableBody");
+      if (!tbody) return;
       tbody.innerHTML = '<tr><td colspan="8" class="text-center p-4">Memuat data...</td></tr>';
       
       try {
@@ -122,120 +123,3 @@
           tbody.innerHTML = '<tr><td colspan="8" class="text-center p-4 text-gray-500">Belum ada data Work Order.</td></tr>';
           globalWOData = [];
           return;
-        }
-
-        globalWOData = data;
-        renderTableData(data);
-      } catch (err) {
-        console.error("Error loadData:", err);
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center p-4 text-red-500">Gagal memuat data. Periksa koneksi/URL API.</td></tr>';
-      }
-    }
-
-    function renderTableData(data) {
-      const tbody = document.getElementById("tableBody");
-      tbody.innerHTML = "";
-      
-      const reversed = [...data].reverse();
-      reversed.forEach(row => {
-        const tr = document.createElement("tr");
-        tr.className = "border-b hover:bg-gray-50";
-
-        let badgeBg = "bg-gray-500";
-        const st = (row.status || "Pending").trim();
-        if (st === "In Progress") badgeBg = "bg-yellow-500";
-        if (st === "Completed") badgeBg = "bg-green-600";
-
-        tr.innerHTML = `
-          <td class="p-3 text-sm font-mono">${row.id || '-'}</td>
-          <td class="p-3 text-sm">${row.tanggal || '-'}</td>
-          <td class="p-3 text-sm">${row.pelapor || '-'}</td>
-          <td class="p-3 text-sm">${row.lokasi || '-'}</td>
-          <td class="p-3 text-sm">${row.deskripsi || '-'}</td>
-          <td class="p-3 text-sm font-semibold">${row.prioritas || '-'}</td>
-          <td class="p-3 text-sm"><span class="px-2 py-1 rounded text-xs text-white ${badgeBg}">${st}</span></td>
-          <td class="p-3 text-sm space-x-1">
-            <button onclick="updateStatus('${row.id}', 'In Progress')" class="bg-yellow-500 text-white px-2 py-1 rounded text-xs hover:bg-yellow-600">Proses</button>
-            <button onclick="updateStatus('${row.id}', 'Completed')" class="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700">Selesai</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    async function submitWO(e) {
-      e.preventDefault();
-      const btn = document.getElementById("btnSubmit");
-      btn.innerText = "Mengirim...";
-      btn.disabled = true;
-
-      const payload = {
-        action: "create",
-        pelapor: document.getElementById("pelapor").value,
-        lokasi: document.getElementById("lokasi").value,
-        deskripsi: document.getElementById("deskripsi").value,
-        prioritas: document.getElementById("prioritas").value
-      };
-
-      try {
-        await fetch(API_URL, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify(payload)
-        });
-
-        document.getElementById("woForm").reset();
-        alert("Work Order berhasil dikirim!");
-        setTimeout(loadData, 2000);
-      } catch (err) {
-        alert("Gagal mengirim Work Order: " + err);
-      } finally {
-        btn.innerText = "Kirim Work Order";
-        btn.disabled = false;
-      }
-    }
-
-    async function updateStatus(id, newStatus) {
-      // 1. VERIFIKASI PASSWORD ADMIN
-      const inputPassword = prompt(`Aksi Admin [Ubah Status ke "${newStatus}"]: Masukkan Password Admin:`);
-      
-      if (inputPassword === null) return; // User menekan Batal
-
-      if (inputPassword !== ADMIN_PASSWORD) {
-        alert("Password Admin Salah! Akses ditolak.");
-        return;
-      }
-
-      // 2. KONFIRMASI DILANJUTKAN JIKA PASSWORD BENAR
-      if (!confirm(`Konfirmasi ubah status Work Order ${id} menjadi "${newStatus}"?`)) return;
-
-      try {
-        await fetch(API_URL, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify({ action: "updateStatus", id: id, status: newStatus })
-        });
-
-        alert("Status berhasil diperbarui!");
-        setTimeout(loadData, 2000);
-      } catch (err) {
-        alert("Gagal memperbarui status: " + err);
-      }
-    }
-
-    function openReportModal() {
-      const now = new Date();
-      const m = String(now.getMonth() + 1).padStart(2, '0');
-      document.getElementById("reportMonth").value = `${now.getFullYear()}-${m}`;
-      document.getElementById("reportModal").classList.remove("hidden");
-    }
-
-    function closeReportModal() {
-      document.getElementById("reportModal").classList.add("hidden");
-    }
-
-    function generateReport() {
-      const monthVal = document.getElementById("reportMonth").value;
-      const adminName = document.getElementById("adminName
