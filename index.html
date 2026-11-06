@@ -3,20 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistem Work Order Internal</title>
+  <title>Sistem Work Order AstonTanjungpinang</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-4 md:p-8">
 
   <script>
-    // ⚠️ PASTE URL GOOGLE APPS SCRIPT NEW DEPLOYMENT DI SINI
-    const API_URL = "https://script.google.com/macros/s/AKfycbx7W0ATKUb0naRZ-A86nCnRfoxTS2t-srdC3VSfWBXtA_7Floe-0dDmtogTi2F0FG5LdQ/exec";
+    // URL GOOGLE APPS SCRIPT
+    const API_URL = "https://script.google.com/macros/s/AKfycbzaSQ-qCOwpBdvtLEVpOirGH4G9ZVA_W58VDlcG3X0U2nN5-P3rBKbVLgfbXbJWdDGPTQ/exec";
     
-    // PASSWORD ADMIN UNTUK AKSI PROSES / SELESAI
+    // PASSWORD ADMIN UNTUK AKSI STATUS
     const ADMIN_PASSWORD = "admin2026";
   </script>
 
-  <div class="max-w-5xl mx-auto space-y-8">
+  <div class="max-w-7xl mx-auto space-y-8">
     <h1 class="text-3xl font-bold text-center text-gray-800">Sistem Work Order Internal</h1>
 
     <!-- Form Input Work Order -->
@@ -73,11 +73,14 @@
               <th class="p-3 text-sm font-semibold">Deskripsi</th>
               <th class="p-3 text-sm font-semibold">Prioritas</th>
               <th class="p-3 text-sm font-semibold">Status</th>
+              <th class="p-3 text-sm font-semibold">PIC Teknisi</th>
+              <th class="p-3 text-sm font-semibold">Time Solving</th>
+              <th class="p-3 text-sm font-semibold">Remark</th>
               <th class="p-3 text-sm font-semibold">Aksi Admin</th>
             </tr>
           </thead>
           <tbody id="tableBody">
-            <tr><td colspan="8" class="text-center p-4">Memuat data...</td></tr>
+            <tr><td colspan="11" class="text-center p-4">Memuat data...</td></tr>
           </tbody>
         </table>
       </div>
@@ -113,14 +116,14 @@
     async function loadData() {
       const tbody = document.getElementById("tableBody");
       if (!tbody) return;
-      tbody.innerHTML = '<tr><td colspan="8" class="text-center p-4">Memuat data...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="11" class="text-center p-4">Memuat data...</td></tr>';
       
       try {
         const res = await fetch(API_URL + "?t=" + new Date().getTime());
         const data = await res.json();
         
         if (!Array.isArray(data) || data.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="8" class="text-center p-4 text-gray-500">Belum ada data Work Order.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="11" class="text-center p-4 text-gray-500">Belum ada data Work Order.</td></tr>';
           globalWOData = [];
           return;
         }
@@ -129,7 +132,7 @@
         renderTableData(data);
       } catch (err) {
         console.error("Error loadData:", err);
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center p-4 text-red-500">Gagal memuat data. Periksa koneksi atau URL Apps Script.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11" class="text-center p-4 text-red-500">Gagal memuat data. Klik Refresh Data.</td></tr>';
       }
     }
 
@@ -145,6 +148,7 @@
         let badgeBg = "bg-gray-500";
         const st = (row.status || "Pending").trim();
         if (st === "In Progress") badgeBg = "bg-yellow-500";
+        if (st === "Hold") badgeBg = "bg-orange-600";
         if (st === "Completed") badgeBg = "bg-green-600";
 
         tr.innerHTML = 
@@ -155,9 +159,13 @@
           '<td class="p-3 text-sm">' + (row.deskripsi || '-') + '</td>' +
           '<td class="p-3 text-sm font-semibold">' + (row.prioritas || '-') + '</td>' +
           '<td class="p-3 text-sm"><span class="px-2 py-1 rounded text-xs text-white ' + badgeBg + '">' + st + '</span></td>' +
-          '<td class="p-3 text-sm space-x-1">' +
-            '<button onclick="updateStatus(\'' + row.id + '\', \'In Progress\')" class="bg-yellow-500 text-white px-2 py-1 rounded text-xs hover:bg-yellow-600">Proses</button> ' +
-            '<button onclick="updateStatus(\'' + row.id + '\', \'Completed\')" class="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700">Selesai</button>' +
+          '<td class="p-3 text-sm font-medium text-blue-600">' + (row.pic || '-') + '</td>' +
+          '<td class="p-3 text-sm text-purple-600 font-medium">' + (row.timeSolving || '-') + '</td>' +
+          '<td class="p-3 text-sm text-gray-600 italic">' + (row.remark || '-') + '</td>' +
+          '<td class="p-3 text-sm flex gap-1">' +
+            '<button onclick="updateStatus(\'' + row.id + '\', \'In Progress\', \'' + (row.pic || '') + '\', \'' + (row.timeSolving || '') + '\', \'' + (row.remark || '') + '\')" class="bg-yellow-500 text-white px-2 py-1 rounded text-xs hover:bg-yellow-600">Proses</button>' +
+            '<button onclick="updateStatus(\'' + row.id + '\', \'Hold\', \'' + (row.pic || '') + '\', \'' + (row.timeSolving || '') + '\', \'' + (row.remark || '') + '\')" class="bg-orange-600 text-white px-2 py-1 rounded text-xs hover:bg-orange-700">Hold</button>' +
+            '<button onclick="updateStatus(\'' + row.id + '\', \'Completed\', \'' + (row.pic || '') + '\', \'' + (row.timeSolving || '') + '\', \'' + (row.remark || '') + '\')" class="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700">Selesai</button>' +
           '</td>';
 
         tbody.appendChild(tr);
@@ -198,15 +206,26 @@
       }
     }
 
-    async function updateStatus(id, newStatus) {
+    async function updateStatus(id, newStatus, currentPic, currentTimeSolving, currentRemark) {
       const inputPassword = prompt('Aksi Admin [Ubah Status ke "' + newStatus + '"]: Masukkan Password Admin:');
-      
       if (inputPassword === null) return;
 
       if (inputPassword !== ADMIN_PASSWORD) {
         alert("Password Admin Salah! Akses ditolak.");
         return;
       }
+
+      // Input Nama PIC
+      const inputPic = prompt('Masukkan Nama PIC / Teknisi yang mengerjakan:', currentPic !== '-' ? currentPic : '');
+      if (inputPic === null) return;
+
+      // Input Time Solving
+      const inputTime = prompt('Masukkan Waktu Penyelesaian (Time Solving), misal "2 Jam" / "45 Menit":', currentTimeSolving !== '-' ? currentTimeSolving : '');
+      if (inputTime === null) return;
+
+      // Input Remark (Terutama penting jika Hold)
+      const inputRemark = prompt('Masukkan Remark / Catatan (Alasan Hold / Keterangan):', currentRemark !== '-' ? currentRemark : '');
+      if (inputRemark === null) return;
 
       if (!confirm('Konfirmasi ubah status Work Order ' + id + ' menjadi "' + newStatus + '"?')) return;
 
@@ -215,10 +234,17 @@
           method: "POST",
           mode: "no-cors",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({ action: "updateStatus", id: id, status: newStatus })
+          body: new URLSearchParams({ 
+            action: "updateStatus", 
+            id: id, 
+            status: newStatus,
+            pic: inputPic || '-',
+            timeSolving: inputTime || '-',
+            remark: inputRemark || '-'
+          })
         });
 
-        alert("Status berhasil diperbarui!");
+        alert("Status, PIC, Time Solving, dan Remark berhasil diperbarui!");
         setTimeout(loadData, 2000);
       } catch (err) {
         alert("Gagal memperbarui status: " + err);
@@ -258,6 +284,7 @@
       const totalWO = filteredData.length;
       const completedWO = filteredData.filter(r => (r.status || '').trim() === 'Completed').length;
       const progressWO = filteredData.filter(r => (r.status || '').trim() === 'In Progress').length;
+      const holdWO = filteredData.filter(r => (r.status || '').trim() === 'Hold').length;
       const pendingWO = filteredData.filter(r => (r.status || '').trim() === 'Pending' || !r.status).length;
       const completionRate = totalWO > 0 ? ((completedWO / totalWO) * 100).toFixed(1) : 0;
 
@@ -276,11 +303,14 @@
             '<td style="padding: 8px;">' + (item.deskripsi || '-') + '</td>' +
             '<td style="padding: 8px;">' + (item.prioritas || '-') + '</td>' +
             '<td style="padding: 8px; font-weight: bold;">' + (item.status || 'Pending') + '</td>' +
+            '<td style="padding: 8px; color: #2563eb;">' + (item.pic || '-') + '</td>' +
+            '<td style="padding: 8px; color: #7c3aed;">' + (item.timeSolving || '-') + '</td>' +
+            '<td style="padding: 8px; font-style: italic; color: #555;">' + (item.remark || '-') + '</td>' +
           '</tr>';
       });
 
       if (filteredData.length === 0) {
-        rowsHTML = '<tr><td colspan="8" style="text-align: center; padding: 15px; color: #777;">Tidak ada data Work Order pada periode ini.</td></tr>';
+        rowsHTML = '<tr><td colspan="11" style="text-align: center; padding: 15px; color: #777;">Tidak ada data Work Order pada periode ini.</td></tr>';
       }
 
       const reportHTML = 
@@ -291,12 +321,12 @@
           '<style>' +
             'body { font-family: Arial, sans-serif; padding: 20px; color: #333; }' +
             'h1, h2, h3 { margin: 5px 0; }' +
-            '.kpi-container { display: flex; gap: 15px; margin: 20px 0; }' +
-            '.kpi-card { flex: 1; border: 1px solid #ccc; padding: 12px; border-radius: 6px; text-align: center; background: #f9f9f9; }' +
-            '.kpi-card h4 { margin: 0; color: #666; font-size: 13px; }' +
-            '.kpi-card p { margin: 5px 0 0 0; font-size: 20px; font-weight: bold; }' +
-            'table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }' +
-            'th { background-color: #f2f2f2; padding: 8px; border-bottom: 2px solid #ccc; text-align: left; }' +
+            '.kpi-container { display: flex; gap: 10px; margin: 20px 0; }' +
+            '.kpi-card { flex: 1; border: 1px solid #ccc; padding: 10px; border-radius: 6px; text-align: center; background: #f9f9f9; }' +
+            '.kpi-card h4 { margin: 0; color: #666; font-size: 11px; }' +
+            '.kpi-card p { margin: 5px 0 0 0; font-size: 18px; font-weight: bold; }' +
+            'table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 10px; }' +
+            'th { background-color: #f2f2f2; padding: 6px; border-bottom: 2px solid #ccc; text-align: left; }' +
             '.signature-area { margin-top: 40px; display: flex; justify-content: space-between; page-break-inside: avoid; }' +
             '.sig-box { width: 40%; text-align: center; }' +
             '.btn-print { background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-bottom: 20px; }' +
@@ -310,11 +340,12 @@
             '<h3>Periode: ' + periodTitle + '</h3>' +
           '</div>' +
           '<div class="kpi-container">' +
-            '<div class="kpi-card"><h4>TOTAL WORK ORDER</h4><p>' + totalWO + '</p></div>' +
-            '<div class="kpi-card"><h4>SELESAI (COMPLETED)</h4><p style="color: green;">' + completedWO + '</p></div>' +
-            '<div class="kpi-card"><h4>DALAM PROSES</h4><p style="color: orange;">' + progressWO + '</p></div>' +
+            '<div class="kpi-card"><h4>TOTAL WO</h4><p>' + totalWO + '</p></div>' +
+            '<div class="kpi-card"><h4>SELESAI</h4><p style="color: green;">' + completedWO + '</p></div>' +
+            '<div class="kpi-card"><h4>PROSES</h4><p style="color: orange;">' + progressWO + '</p></div>' +
+            '<div class="kpi-card"><h4>HOLD</h4><p style="color: #d97706;">' + holdWO + '</p></div>' +
             '<div class="kpi-card"><h4>PENDING</h4><p style="color: gray;">' + pendingWO + '</p></div>' +
-            '<div class="kpi-card"><h4>TINGKAT PENYELESAIAN</h4><p style="color: blue;">' + completionRate + '%</p></div>' +
+            '<div class="kpi-card"><h4>% SELESAI</h4><p style="color: blue;">' + completionRate + '%</p></div>' +
           '</div>' +
           '<h3>Daftar Detail Pekerjaan</h3>' +
           '<table>' +
@@ -328,6 +359,9 @@
                 '<th>Deskripsi</th>' +
                 '<th>Prioritas</th>' +
                 '<th>Status</th>' +
+                '<th>PIC Teknisi</th>' +
+                '<th>Time Solving</th>' +
+                '<th>Remark</th>' +
               '</tr>' +
             '</thead>' +
             '<tbody>' +
