@@ -10,7 +10,7 @@
 
   <script>
     // URL GOOGLE APPS SCRIPT
-    const API_URL = "https://script.google.com/macros/s/AKfycbxv9qVQPTiyEFebW6XLkl2oTD6SJEGxCqF0hxXNnwf72YFAPYQsuOur_tTYD9bYacNP/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbyoBd_a-TICTUjIZ6-S6Q86L7KmYgRYPycdd2HrlhfH3g1qRKPLQxqeR0zaAGwRzvkHiA/exec";
     
     // PASSWORD ADMIN UNTUK AKSI STATUS
     const ADMIN_PASSWORD = "admin2026";
@@ -132,7 +132,7 @@
         renderTableData(data);
       } catch (err) {
         console.error("Error loadData:", err);
-        tbody.innerHTML = '<tr><td colspan="11" class="text-center p-4 text-red-500">Gagal memuat data. Periksa URL Apps Script.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11" class="text-center p-4 text-red-500">Gagal memuat data. Periksa URL Apps Script/Koneksi.</td></tr>';
       }
     }
 
@@ -324,12 +324,10 @@
       });
 
       if (monthlyData.length === 0) {
-        rowsHTML = '<tr id="emptyRow"><td colspan="11" style="text-align: center; padding: 15px; color: #777;">Tidak ada data Work Order pada periode ini.</td></tr>';
+        rowsHTML = '<tr><td colspan="11" style="text-align: center; padding: 15px; color: #777;">Tidak ada data Work Order pada periode ini.</td></tr>';
       }
 
-      const printWin = window.open('', '_blank');
-      
-      printWin.document.write(`
+      const reportHTML = `
         <!DOCTYPE html>
         <html>
         <head>
@@ -369,23 +367,23 @@
           </div>
 
           <div class="kpi-container">
-            <div class="kpi-card active" data-filter="ALL">
+            <div class="kpi-card active" onclick="filterReport('ALL', this)">
               <h4>TOTAL WO BULAN INI</h4>
               <p>${totalWO}</p>
             </div>
-            <div class="kpi-card" data-filter="Completed">
+            <div class="kpi-card" onclick="filterReport('Completed', this)">
               <h4>SELESAI</h4>
               <p style="color: green;">${completedWO}</p>
             </div>
-            <div class="kpi-card" data-filter="In Progress">
+            <div class="kpi-card" onclick="filterReport('In Progress', this)">
               <h4>PROSES</h4>
               <p style="color: #d97706;">${progressWO}</p>
             </div>
-            <div class="kpi-card" data-filter="Hold">
+            <div class="kpi-card" onclick="filterReport('Hold', this)">
               <h4>HOLD</h4>
               <p style="color: #dc2626;">${holdWO}</p>
             </div>
-            <div class="kpi-card" data-filter="Pending">
+            <div class="kpi-card" onclick="filterReport('Pending', this)">
               <h4>PENDING</h4>
               <p style="color: gray;">${pendingWO}</p>
             </div>
@@ -427,48 +425,45 @@
               <p><b><u>${managerName}</u></b><br>Manager / Head Department</p>
             </div>
           </div>
+
+          <script>
+            function filterReport(targetStatus, cardEl) {
+              var cards = document.querySelectorAll('.kpi-card');
+              cards.forEach(function(c) { c.classList.remove('active'); });
+              if (cardEl) cardEl.classList.add('active');
+
+              var rows = document.querySelectorAll('.wo-row');
+              var visibleCount = 0;
+              var label = "Semua Status";
+
+              if (targetStatus === "In Progress") label = "Khusus Status: In Progress (Dalam Proses)";
+              else if (targetStatus === "Hold") label = "Khusus Status: Hold (Dihentikan Sementara)";
+              else if (targetStatus === "Pending") label = "Khusus Status: Pending (Belum Diproses)";
+              else if (targetStatus === "Completed") label = "Khusus Status: Completed (Selesai)";
+
+              rows.forEach(function(row) {
+                var st = row.getAttribute('data-status');
+                if (targetStatus === 'ALL' || st === targetStatus) {
+                  row.style.display = '';
+                  visibleCount++;
+                  var numEl = row.querySelector('.row-num');
+                  if (numEl) numEl.innerText = visibleCount;
+                } else {
+                  row.style.display = 'none';
+                }
+              });
+
+              var titleEl = document.getElementById('filterTitleLabel');
+              if (titleEl) titleEl.innerText = "Kriteria Filter: " + label + " (Total Data Tampil: " + visibleCount + ")";
+            }
+          <\/script>
         </body>
         </html>
-      `);
+      `;
 
+      const printWin = window.open('', '_blank');
+      printWin.document.write(reportHTML);
       printWin.document.close();
-
-      // Menambahkan fungsi klik filter tanpa menyisipkan tag script berisiko
-      printWin.addEventListener('DOMContentLoaded', () => {
-        const cards = printWin.document.querySelectorAll('.kpi-card[data-filter]');
-        cards.forEach(card => {
-          card.addEventListener('click', () => {
-            const targetStatus = card.getAttribute('data-filter');
-            cards.forEach(c => c.classList.remove('active'));
-            card.classList.add('active');
-
-            const rows = printWin.document.querySelectorAll('.wo-row');
-            let visibleCount = 0;
-            let label = "Semua Status";
-
-            if (targetStatus === "In Progress") label = "Khusus Status: In Progress (Dalam Proses)";
-            else if (targetStatus === "Hold") label = "Khusus Status: Hold (Dihentikan Sementara)";
-            else if (targetStatus === "Pending") label = "Khusus Status: Pending (Belum Diproses)";
-            else if (targetStatus === "Completed") label = "Khusus Status: Completed (Selesai)";
-
-            rows.forEach(row => {
-              const st = row.getAttribute('data-status');
-              if (targetStatus === 'ALL' || st === targetStatus) {
-                row.style.display = '';
-                visibleCount++;
-                const n = row.querySelector('.row-num');
-                if (n) n.innerText = visibleCount;
-              } else {
-                row.style.display = 'none';
-              }
-            });
-
-            const titleEl = printWin.document.getElementById('filterTitleLabel');
-            if (titleEl) titleEl.innerText = "Kriteria Filter: " + label + " (Total Data Tampil: " + visibleCount + ")";
-          });
-        });
-      });
-
       closeReportModal();
     }
 
