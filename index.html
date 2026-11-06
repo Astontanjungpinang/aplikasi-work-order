@@ -105,8 +105,23 @@
     async function loadData() {
       const tbody = document.getElementById("tableBody");
       tbody.innerHTML = '<tr><td colspan="8" class="text-center p-4">Memuat data...</td></tr>';
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
       try {
-        const res = await fetch(API_URL, { method: "GET", redirect: "follow" });
+        const res = await fetch(API_URL, { 
+          method: "GET", 
+          redirect: "follow",
+          signal: controller.signal 
+        });
+        
+        clearTimeout(timeoutId);
+
+        if (!res.ok) {
+          throw new Error("HTTP error! status: " + res.status);
+        }
+        
         const data = await res.json();
         
         if (!Array.isArray(data) || data.length === 0) {
@@ -118,8 +133,15 @@
         globalWOData = data;
         renderTableData(data);
       } catch (err) {
+        clearTimeout(timeoutId);
         console.error("Error loadData:", err);
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center p-4 text-red-500">Gagal memuat data. Periksa koneksi/URL API.</td></tr>';
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8" class="text-center p-4 text-red-500">
+              Gagal memuat data. Periksa koneksi/URL API. 
+              <button onclick="loadData()" class="ml-2 bg-blue-500 text-white px-2 py-1 rounded text-xs">Coba Lagi</button>
+            </td>
+          </tr>`;
       }
     }
 
