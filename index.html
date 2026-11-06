@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-4 md:p-8">
+
   <script>
     // MASUKKAN URL GOOGLE APPS SCRIPT KAMU DI SINI
     const API_URL = "https://script.google.com/macros/s/AKfycbzY3RWYoYPmoTm9EbQth57_l91JTE2tADs7K59ZSuaIH8G5MrT5p78VYJTFk3hTRqNXGQ/exec";
@@ -45,14 +46,11 @@
       </form>
     </div>
 
-    <!-- Dashboard Status Admin & Fitur Laporan -->
+    <!-- Dashboard Status Admin -->
     <div class="bg-white p-6 rounded-lg shadow-md">
-      <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-2">
+      <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-semibold text-gray-700">Daftar Work Order</h2>
-        <div class="flex space-x-2">
-          <button onclick="openReportModal()" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm font-medium">📄 Cetak Laporan Bulanan</button>
-          <button onclick="loadData()" class="bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300 text-sm">Refresh Data</button>
-        </div>
+        <button onclick="loadData()" class="bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300 text-sm">Refresh Data</button>
       </div>
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
@@ -76,95 +74,42 @@
     </div>
   </div>
 
-  <!-- Modal Filter Laporan Bulanan -->
-  <div id="reportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg p-6 max-w-md w-full space-y-4">
-      <h3 class="text-lg font-bold text-gray-800">Cetak Laporan Bulanan Work Order</h3>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Bulan & Tahun</label>
-        <input type="month" id="reportMonth" class="w-full mt-1 p-2 border rounded-md">
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Nama Admin / Pembuat Laporan</label>
-        <input type="text" id="adminName" placeholder="Contoh: Budi Maintenance" class="w-full mt-1 p-2 border rounded-md">
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Nama Atasan / Manager</label>
-        <input type="text" id="managerName" placeholder="Contoh: General Manager" class="w-full mt-1 p-2 border rounded-md">
-      </div>
-      <div class="flex justify-end space-x-2 pt-2">
-        <button onclick="closeReportModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">Batal</button>
-        <button onclick="generateReport()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Buka & Cetak Laporan</button>
-      </div>
-    </div>
-  </div>
-
   <script>
-    let globalWOData = [];
-
     async function loadData() {
       const tbody = document.getElementById("tableBody");
       tbody.innerHTML = '<tr><td colspan="8" class="text-center p-4">Memuat data...</td></tr>';
       
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
-
       try {
-        const res = await fetch(API_URL, { 
-          method: "GET", 
-          redirect: "follow",
-          signal: controller.signal 
-        });
-        
-        clearTimeout(timeoutId);
-
-        if (!res.ok) {
-          throw new Error("HTTP error! status: " + res.status);
-        }
-        
+        const res = await fetch(API_URL, { method: "GET", redirect: "follow" });
         const data = await res.json();
         
         if (!Array.isArray(data) || data.length === 0) {
           tbody.innerHTML = '<tr><td colspan="8" class="text-center p-4 text-gray-500">Belum ada data Work Order.</td></tr>';
-          globalWOData = [];
           return;
         }
 
-        globalWOData = data;
-        renderTableData(data);
+        tbody.innerHTML = "";
+        [...data].reverse().forEach(row => {
+          tbody.innerHTML += `
+            <tr class="border-b hover:bg-gray-50">
+              <td class="p-3 text-sm font-mono">${row.id || '-'}</td>
+              <td class="p-3 text-sm">${row.tanggal || '-'}</td>
+              <td class="p-3 text-sm">${row.pelapor || '-'}</td>
+              <td class="p-3 text-sm">${row.lokasi || '-'}</td>
+              <td class="p-3 text-sm">${row.deskripsi || '-'}</td>
+              <td class="p-3 text-sm font-semibold">${row.prioritas || '-'}</td>
+              <td class="p-3 text-sm"><span class="px-2 py-1 rounded text-xs text-white ${getStatusBadge(row.status)}">${row.status || 'Pending'}</span></td>
+              <td class="p-3 text-sm space-x-1">
+                <button onclick="updateStatus('${row.id}', 'In Progress')" class="bg-yellow-500 text-white px-2 py-1 rounded text-xs hover:bg-yellow-600">Proses</button>
+                <button onclick="updateStatus('${row.id}', 'Completed')" class="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700">Selesai</button>
+              </td>
+            </tr>
+          `;
+        });
       } catch (err) {
-        clearTimeout(timeoutId);
         console.error("Error loadData:", err);
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="8" class="text-center p-4 text-red-500">
-              Gagal memuat data. Periksa koneksi/URL API. 
-              <button onclick="loadData()" class="ml-2 bg-blue-500 text-white px-2 py-1 rounded text-xs">Coba Lagi</button>
-            </td>
-          </tr>`;
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center p-4 text-red-500">Gagal memuat data. Klik tombol Refresh Data.</td></tr>';
       }
-    }
-
-    function renderTableData(data) {
-      const tbody = document.getElementById("tableBody");
-      tbody.innerHTML = "";
-      [...data].reverse().forEach(row => {
-        tbody.innerHTML += `
-          <tr class="border-b hover:bg-gray-50">
-            <td class="p-3 text-sm font-mono">${row.id || '-'}</td>
-            <td class="p-3 text-sm">${row.tanggal || '-'}</td>
-            <td class="p-3 text-sm">${row.pelapor || '-'}</td>
-            <td class="p-3 text-sm">${row.lokasi || '-'}</td>
-            <td class="p-3 text-sm">${row.deskripsi || '-'}</td>
-            <td class="p-3 text-sm font-semibold">${row.prioritas || '-'}</td>
-            <td class="p-3 text-sm"><span class="px-2 py-1 rounded text-xs text-white ${getStatusBadge(row.status)}">${row.status || 'Pending'}</span></td>
-            <td class="p-3 text-sm space-x-1">
-              <button onclick="updateStatus('${row.id}', 'In Progress')" class="bg-yellow-500 text-white px-2 py-1 rounded text-xs hover:bg-yellow-600">Proses</button>
-              <button onclick="updateStatus('${row.id}', 'Completed')" class="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700">Selesai</button>
-            </td>
-          </tr>
-        `;
-      });
     }
 
     function getStatusBadge(status) {
@@ -176,16 +121,28 @@
 
     async function submitWO(e) {
       e.preventDefault();
+      
       const btn = document.getElementById("btnSubmit");
+      const pelaporInput = document.getElementById("pelapor");
+      const lokasiInput = document.getElementById("lokasi");
+      const deskripsiInput = document.getElementById("deskripsi");
+      const prioritasInput = document.getElementById("prioritas");
+
+      // Validasi elemen
+      if (!pelaporInput || !lokasiInput || !deskripsiInput || !prioritasInput) {
+        alert("Error: Elemen form tidak ditemukan di HTML!");
+        return;
+      }
+
       btn.innerText = "Mengirim...";
       btn.disabled = true;
 
       const payload = {
         action: "create",
-        pelapor: document.getElementById("pelapor").value,
-        lokasi: document.getElementById("lokasi").value,
-        deskripsi: document.getElementById("deskripsi").value,
-        prioritas: document.getElementById("prioritas").value
+        pelapor: pelaporInput.value,
+        lokasi: lokasiInput.value,
+        deskripsi: deskripsiInput.value,
+        prioritas: prioritasInput.value
       };
 
       try {
@@ -198,7 +155,7 @@
 
         document.getElementById("woForm").reset();
         alert("Work Order berhasil dikirim!");
-        setTimeout(loadData, 1500);
+        setTimeout(loadData, 2000);
       } catch (err) {
         alert("Gagal mengirim Work Order: " + err);
       } finally {
@@ -219,86 +176,14 @@
         });
 
         alert("Status berhasil diperbarui!");
-        setTimeout(loadData, 1500);
+        setTimeout(loadData, 2000);
       } catch (err) {
         alert("Gagal memperbarui status: " + err);
       }
     }
 
-    // Modal & Cetak Laporan
-    function openReportModal() {
-      const now = new Date();
-      const m = String(now.getMonth() + 1).padStart(2, '0');
-      document.getElementById("reportMonth").value = `${now.getFullYear()}-${m}`;
-      document.getElementById("reportModal").classList.remove("hidden");
-    }
-
-    function closeReportModal() {
-      document.getElementById("reportModal").classList.add("hidden");
-    }
-
-    function generateReport() {
-      const monthVal = document.getElementById("reportMonth").value;
-      const adminName = document.getElementById("adminName").value || "Admin Maintenance";
-      const managerName = document.getElementById("managerName").value || "Head Department / Manager";
-
-      if (!monthVal) {
-        alert("Pilih bulan dan tahun terlebih dahulu.");
-        return;
-      }
-
-      const [year, month] = monthVal.split('-');
-      
-      const filteredData = globalWOData.filter(row => {
-        if (!row.tanggal) return false;
-        const d = new Date(row.tanggal);
-        if (isNaN(d.getTime())) return true; // jika format tanggal teks lokal
-        return d.getFullYear() == parseInt(year) && (d.getMonth() + 1) == parseInt(month);
-      });
-
-      const totalWO = filteredData.length;
-      const completedWO = filteredData.filter(r => r.status === 'Completed').length;
-      const progressWO = filteredData.filter(r => r.status === 'In Progress').length;
-      const pendingWO = filteredData.filter(r => r.status === 'Pending' || !r.status).length;
-      const completionRate = totalWO > 0 ? ((completedWO / totalWO) * 100).toFixed(1) : 0;
-
-      const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-      const periodTitle = `${monthNames[parseInt(month) - 1]}${year}`;
-
-      let rowsHTML = "";
-      filteredData.forEach((item, index) => {
-        rowsHTML += `
-          <tr style="border-bottom: 1px solid #ddd;">
-            <td style="padding: 8px;">${index + 1}</td>
-            <td style="padding: 8px;">${item.id || '-'}</td>
-            <td style="padding: 8px;">${item.tanggal || '-'}</td>
-            <td style="padding: 8px;">${item.pelapor || '-'}</td>
-            <td style="padding: 8px;">${item.lokasi || '-'}</td>
-            <td style="padding: 8px;">${item.deskripsi || '-'}</td>
-            <td style="padding: 8px;">${item.prioritas || '-'}</td>
-            <td style="padding: 8px; font-weight: bold;">${item.status || 'Pending'}</td>
-          </tr>
-        `;
-      });
-
-      if (filteredData.length === 0) {
-        rowsHTML = `<tr><td colspan="8" style="text-align: center; padding: 15px; color: #777;">Tidak ada data Work Order pada periode ini.</td></tr>`;
-      }
-
-      const reportHTML = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Laporan Work Order - ${periodTitle}</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
-            h1, h2, h3 { margin: 5px 0; }
-            .kpi-container { display: flex; gap: 15px; margin: 20px 0; }
-            .kpi-card { flex: 1; border: 1px solid #ccc; padding: 12px; border-radius: 6px; text-align: center; background: #f9f9f9; }
-            .kpi-card h4 { margin: 0; color: #666; font-size: 13px; }
-            .kpi-card p { margin: 5px 0 0 0; font-size: 20px; font-weight: bold; }
-            table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
-            th { background-color: #f2f2f2; padding: 8px; border-bottom: 2px solid #ccc; text-align: left; }
-            .signature-area { margin-top: 40px; display: flex; justify-content: space-between; page-break-inside: avoid; }
-            .sig-box { width: 40%; text-align: center; }
-            .btn-print { background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer
+    // Jalankan otomatis saat halaman dibuka
+    loadData();
+  </script>
+</body>
+</html>
