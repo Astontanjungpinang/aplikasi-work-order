@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistem Work Order Aston Tanjungpinang </title>
+  <title>Sistem Work Order Internal</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-4 md:p-8">
 
   <script>
     // URL GOOGLE APPS SCRIPT
-    const API_URL = "https://script.google.com/macros/s/AKfycbzVz3MYbJMRFhIZMIaCJt_AUgQNnRsXGi62KCjLeGEinL8DhP1alMV-8jTrYRYH37JTtw/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbweuiYxel5oxEK2gSkwHb825vMc2KKdL1XABmIotAQSutRZ0J_KX--CAEVCtuyDk-3ZtA/exec";
     
     // PASSWORD ADMIN UNTUK AKSI STATUS
     const ADMIN_PASSWORD = "admin2026";
@@ -87,23 +87,13 @@
     </div>
   </div>
 
-  <!-- Modal Filter Laporan Bulanan -->
+  <!-- Modal Filter Laporan Bulanan (Tanpa Filter Status Awal) -->
   <div id="reportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-lg p-6 max-w-md w-full space-y-4 shadow-xl">
       <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Cetak Laporan Bulanan Work Order</h3>
       <div>
         <label class="block text-sm font-medium text-gray-700">Pilih Bulan & Tahun</label>
         <input type="month" id="reportMonth" class="w-full mt-1 p-2 border rounded-md">
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Filter Status Awal</label>
-        <select id="reportStatusFilter" class="w-full mt-1 p-2 border rounded-md font-medium text-gray-800">
-          <option value="ALL">Semua Status (Laporan Lengkap Ops)</option>
-          <option value="In Progress">Khusus Status: In Progress (Dalam Proses)</option>
-          <option value="Hold">Khusus Status: Hold (Dihentikan Sementara)</option>
-          <option value="Pending">Khusus Status: Pending (Belum Diproses)</option>
-          <option value="Completed">Khusus Status: Completed (Selesai)</option>
-        </select>
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700">Nama Admin / Pembuat Laporan</label>
@@ -282,7 +272,6 @@
 
     function generateReport() {
       const monthVal = document.getElementById("reportMonth").value;
-      const initialFilter = document.getElementById("reportStatusFilter").value;
       const adminName = document.getElementById("adminName").value || "Admin Maintenance";
       const managerName = document.getElementById("managerName").value || "Head Department / Manager";
 
@@ -345,7 +334,7 @@
           </div>
 
           <div class="kpi-container">
-            <div class="kpi-card" id="card-ALL" onclick="applyFilter('ALL')">
+            <div class="kpi-card active" id="card-ALL" onclick="applyFilter('ALL')">
               <h4>TOTAL WO BULAN INI</h4>
               <p id="cnt-total">0</p>
             </div>
@@ -421,83 +410,11 @@
               document.getElementById('cnt-pending').innerText = pendingWO;
               document.getElementById('cnt-rate').innerText = completionRate + '%';
 
-              applyFilter('${initialFilter}');
+              applyFilter('ALL');
             }
 
             function applyFilter(filterType) {
               const cards = document.querySelectorAll('.kpi-card');
               cards.forEach(c => c.classList.remove('active'));
               
-              const activeCard = document.getElementById('card-' + filterType);
-              if (activeCard) activeCard.classList.add('active');
-
-              let filtered = [];
-              let labelText = "";
-
-              if (filterType === 'In Progress') {
-                filtered = monthlyWOData.filter(r => (r.status || '').trim() === 'In Progress');
-                labelText = "Khusus Status: In Progress (Dalam Proses)";
-              } else if (filterType === 'Hold') {
-                filtered = monthlyWOData.filter(r => (r.status || '').trim() === 'Hold');
-                labelText = "Khusus Status: Hold (Dihentikan Sementara)";
-              } else if (filterType === 'Pending') {
-                filtered = monthlyWOData.filter(r => (r.status || '').trim() === 'Pending' || !r.status);
-                labelText = "Khusus Status: Pending (Belum Diproses)";
-              } else if (filterType === 'Completed') {
-                filtered = monthlyWOData.filter(r => (r.status || '').trim() === 'Completed');
-                labelText = "Khusus Status: Completed (Selesai)";
-              } else {
-                filtered = monthlyWOData;
-                labelText = "Semua Status (Laporan Lengkap Operasional)";
-              }
-
-              document.getElementById('filterTitleLabel').innerText = "Kriteria Filter: " + labelText + " (Total Data Tampil: " + filtered.length + ")";
-
-              const tbody = document.getElementById('reportTableBody');
-              tbody.innerHTML = "";
-
-              if (filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; padding: 15px; color: #777;">Tidak ada data Work Order dengan status ini.</td></tr>';
-                return;
-              }
-
-              filtered.forEach((item, index) => {
-                const st = (item.status || 'Pending').trim();
-                let statusColor = "#555";
-                if (st === "Completed") statusColor = "green";
-                if (st === "In Progress") statusColor = "#d97706";
-                if (st === "Hold") statusColor = "#dc2626";
-
-                tbody.innerHTML += 
-                  '<tr style="border-bottom: 1px solid #ddd;">' +
-                    '<td style="padding: 6px;">' + (index + 1) + '</td>' +
-                    '<td style="padding: 6px;">' + (item.id || '-') + '</td>' +
-                    '<td style="padding: 6px;">' + (item.tanggal || '-') + '</td>' +
-                    '<td style="padding: 6px;">' + (item.pelapor || '-') + '</td>' +
-                    '<td style="padding: 6px;">' + (item.lokasi || '-') + '</td>' +
-                    '<td style="padding: 6px;">' + (item.deskripsi || '-') + '</td>' +
-                    '<td style="padding: 6px;">' + (item.prioritas || '-') + '</td>' +
-                    '<td style="padding: 6px; font-weight: bold; color: ' + statusColor + ';">' + st + '</td>' +
-                    '<td style="padding: 6px; color: #2563eb;">' + (item.pic || '-') + '</td>' +
-                    '<td style="padding: 6px; color: #7c3aed;">' + (item.timeSolving || '-') + '</td>' +
-                    '<td style="padding: 6px; font-style: italic; color: #444;">' + (item.remark || '-') + '</td>' +
-                  '</tr>';
-              });
-            }
-
-            initReport();
-          <\/script>
-        </body>
-        </html>
-      `;
-
-      const printWin = window.open('', '_blank');
-      printWin.document.write(reportHTML);
-      printWin.document.close();
-      closeReportModal();
-    }
-
-    loadData();
-  </script>
-</body>
-</html>
+              const activeCard = document.getElementById('card
