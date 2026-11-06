@@ -10,20 +10,20 @@
 
   <script>
     // URL GOOGLE APPS SCRIPT
-    const API_URL = "https://script.google.com/macros/s/AKfycbzGaGDDoQ5b5qUd1I5uuBGWwnRsv8AXrAj1ET_2Ppzj5f3iJnduLd302PK7HpDL342azw/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbx3bDpU1XgQekDyI-raGoN9WUc68Z13witACE5TqiLuCgcoW-_5ZsL4jwDT4xLRLi5-nw/exec";
     
     // PASSWORD ADMIN UNTUK AKSI STATUS
     const ADMIN_PASSWORD = "admin2026";
 
-    // LOGO ASTON TANJUNG PINANG
-    const LOGO_URL = "https://upload.wikimedia.org/wikipedia/commons/4/4b/Aston_Tanjung_Pinang_Logo.png"; 
+    // LOGO ASTON TANJUNG PINANG (SVG FALLBACK RESMI ASTON)
+    const ASTON_LOGO_SVG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 450 200'><text x='10' y='110' font-family='Arial, sans-serif' font-size='110' font-weight='bold' fill='%23052855' letter-spacing='4'>ASTON</text><text x='15' y='145' font-family='Arial, sans-serif' font-size='22' font-weight='normal' fill='%23777777' letter-spacing='3'>TANJUNG PINANG</text><text x='15' y='175' font-family='Arial, sans-serif' font-size='16' font-weight='normal' fill='%23888888' letter-spacing='2'>HOTEL %26 CONFERENCE CENTER</text></svg>";
   </script>
 
   <div class="max-w-7xl mx-auto space-y-8">
-    <!-- Header Utama Dengan Logo -->
+    <!-- Header Utama Dengan Logo ASTON -->
     <div class="bg-white p-6 rounded-lg shadow-md flex flex-col md:flex-row items-center justify-between gap-4">
       <div class="flex items-center space-x-4">
-        <img src="https://i.ibb.co/3s3tX08/Aston-Tanjung-Pinang.png" alt="Aston Tanjung Pinang Logo" class="h-16 md:h-20 object-contain" onerror="this.src='https://raw.githubusercontent.com/tanjungpinang/assets/main/aston.png'; this.onerror=null;">
+        <img id="mainLogo" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 450 200'><text x='10' y='110' font-family='Arial, sans-serif' font-size='110' font-weight='bold' fill='%23052855' letter-spacing='4'>ASTON</text><text x='15' y='145' font-family='Arial, sans-serif' font-size='22' font-weight='normal' fill='%23777777' letter-spacing='3'>TANJUNG PINANG</text><text x='15' y='175' font-family='Arial, sans-serif' font-size='16' font-weight='normal' fill='%23888888' letter-spacing='2'>HOTEL %26 CONFERENCE CENTER</text></svg>" alt="Aston Tanjung Pinang Logo" class="h-16 md:h-20 object-contain">
         <div>
           <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Sistem Work Order Internal</h1>
           <p class="text-sm text-gray-500 font-medium">ASTON Tanjung Pinang Hotel & Conference Center</p>
@@ -345,8 +345,8 @@
           <style>
             body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
             h1, h2, h3 { margin: 2px 0; }
-            .header-flex { display: flex; justify-content: space-between; items-center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 15px; }
-            .logo-report { height: 50px; object-fit: contain; }
+            .header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 15px; }
+            .logo-report { height: 60px; object-fit: contain; }
             .kpi-container { display: flex; gap: 10px; margin: 15px 0; }
             .kpi-card { 
               flex: 1; border: 1px solid #ccc; padding: 10px; border-radius: 6px; 
@@ -380,7 +380,7 @@
               <h4 id="filterTitleLabel" style="color: #2563eb; margin-top: 4px;">Kriteria Filter: Semua Status</h4>
             </div>
             <div>
-              <img src="https://i.ibb.co/3s3tX08/Aston-Tanjung-Pinang.png" alt="Aston Tanjung Pinang" class="logo-report">
+              <img src="${ASTON_LOGO_SVG}" alt="Aston Tanjung Pinang" class="logo-report">
             </div>
           </div>
 
