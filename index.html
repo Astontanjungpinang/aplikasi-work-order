@@ -10,7 +10,7 @@
 
   <script>
     // URL GOOGLE APPS SCRIPT
-    const API_URL = "https://script.google.com/macros/s/AKfycbyz3O2GIc662YyBVoeahlbzyua11hXtLMyJUMnoSpNVPUblH3clpQwrZJi-rAMk3rJQ9w/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwfpvVnn245MtyCpG51AE_stY2ia3Vn8Hqsdel4DIUnyugRPkpznE1FqOV1iOT5nlsu5w/exec";
     
     // PASSWORD ADMIN UNTUK AKSI STATUS
     const ADMIN_PASSWORD = "admin2026";
@@ -308,100 +308,6 @@
         if (st === "Hold") statusColor = "#dc2626";
 
         rowsHTML += 
-          '<tr style="border-bottom: 1px solid #ddd;">' +
-            '<td style="padding: 6px;">' + (index + 1) + '</td>' +
-            '<td style="padding: 6px;">' + (item.id || '-') + '</td>' +
-            '<td style="padding: 6px;">' + (item.tanggal || '-') + '</td>' +
-            '<td style="padding: 6px;">' + (item.pelapor || '-') + '</td>' +
-            '<td style="padding: 6px;">' + (item.lokasi || '-') + '</td>' +
-            '<td style="padding: 6px;">' + (item.deskripsi || '-') + '</td>' +
-            '<td style="padding: 6px;">' + (item.prioritas || '-') + '</td>' +
-            '<td style="padding: 6px; font-weight: bold; color: ' + statusColor + ';">' + st + '</td>' +
-            '<td style="padding: 6px; color: #2563eb;">' + (item.pic || '-') + '</td>' +
-            '<td style="padding: 6px; color: #7c3aed;">' + (item.timeSolving || '-') + '</td>' +
-            '<td style="padding: 6px; font-style: italic; color: #444;">' + (item.remark || '-') + '</td>' +
-          '</tr>';
-      });
-
-      if (monthlyData.length === 0) {
-        rowsHTML = '<tr><td colspan="11" style="text-align: center; padding: 15px; color: #777;">Tidak ada data Work Order pada periode ini.</td></tr>';
-      }
-
-      const reportHTML = 
-        '<!DOCTYPE html>' +
-        '<html>' +
-        '<head>' +
-          '<title>Laporan Work Order - ' + periodTitle + '</title>' +
-          '<style>' +
-            'body { font-family: Arial, sans-serif; padding: 20px; color: #333; }' +
-            'h1, h2, h3 { margin: 4px 0; }' +
-            '.kpi-container { display: flex; gap: 10px; margin: 15px 0; }' +
-            '.kpi-card { flex: 1; border: 1px solid #ccc; padding: 10px; border-radius: 6px; text-align: center; background: #f9f9f9; }' +
-            '.kpi-card h4 { margin: 0; color: #666; font-size: 11px; }' +
-            '.kpi-card p { margin: 4px 0 0 0; font-size: 18px; font-weight: bold; }' +
-            'table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; }' +
-            'th { background-color: #f2f2f2; padding: 6px; border-bottom: 2px solid #ccc; text-align: left; }' +
-            '.signature-area { margin-top: 35px; display: flex; justify-content: space-between; page-break-inside: avoid; }' +
-            '.sig-box { width: 40%; text-align: center; }' +
-            '.btn-print { background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; margin-bottom: 15px; }' +
-            '@media print { .btn-print { display: none; } }' +
-          '</style>' +
-        '</head>' +
-        '<body>' +
-          '<button class="btn-print" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>' +
-          '<div style="border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 15px;">' +
-            '<h1>LAPORAN REKAPITULASI WORK ORDER</h1>' +
-            '<h3>Periode: ' + periodTitle + '</h3>' +
-          '</div>' +
-          '<div class="kpi-container">' +
-            '<div class="kpi-card"><h4>TOTAL WO BULAN INI</h4><p>' + totalWO + '</p></div>' +
-            '<div class="kpi-card"><h4>SELESAI</h4><p style="color: green;">' + completedWO + '</p></div>' +
-            '<div class="kpi-card"><h4>PROSES</h4><p style="color: #d97706;">' + progressWO + '</p></div>' +
-            '<div class="kpi-card"><h4>HOLD</h4><p style="color: #dc2626;">' + holdWO + '</p></div>' +
-            '<div class="kpi-card"><h4>PENDING</h4><p style="color: gray;">' + pendingWO + '</p></div>' +
-            '<div class="kpi-card"><h4>% SELESAI</h4><p style="color: blue;">' + completionRate + '%</p></div>' +
-          '</div>' +
-          '<h3>Daftar Detail Pekerjaan</h3>' +
-          '<table>' +
-            '<thead>' +
-              '<tr>' +
-                '<th>No</th>' +
-                '<th>ID Work Order</th>' +
-                '<th>Tanggal</th>' +
-                '<th>Pelapor</th>' +
-                '<th>Lokasi</th>' +
-                '<th>Deskripsi</th>' +
-                '<th>Prioritas</th>' +
-                '<th>Status</th>' +
-                '<th>PIC Teknisi</th>' +
-                '<th>Time Solving</th>' +
-                '<th>Remark</th>' +
-              '</tr>' +
-            '</thead>' +
-            '<tbody>' +
-              rowsHTML +
-            '</tbody>' +
-          '</table>' +
-          '<div class="signature-area">' +
-            '<div class="sig-box">' +
-              '<p>Dibuat Oleh,</p><br><br><br>' +
-              '<p><b><u>' + adminName + '</u></b><br>Admin Maintenance</p>' +
-            '</div>' +
-            '<div class="sig-box">' +
-              '<p>Disetujui Oleh,</p><br><br><br>' +
-              '<p><b><u>' + managerName + '</u></b><br>Manager / Head Department</p>' +
-            '</div>' +
-          '</div>' +
-        '</body>' +
-        '</html>';
-
-      const printWin = window.open('', '_blank');
-      printWin.document.write(reportHTML);
-      printWin.document.close();
-      closeReportModal();
-    }
-
-    loadData();
-  </script>
-</body>
-</html>
+          '<tr class="wo-row" data-status="' + st + '" style="border-bottom: 1px solid #ddd;">' +
+            '<td style="padding: 6px;" class="row-num">' + (index + 1) + '</td>' +
+            '<td style="padding: 6px;">' + (item.id || '-') + '</td>'
