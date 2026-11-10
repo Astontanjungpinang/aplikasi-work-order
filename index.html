@@ -10,17 +10,17 @@
 
   <script>
     // URL GOOGLE APPS SCRIPT
-    const API_URL = "https://script.google.com/macros/s/AKfycbwh3wFbBrSFmdqxaHbukuNd1jJtzw78_rHHjnCcV88ZiRWMCnAIT4SQqBUCYqqzlv-8rA/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbydOwwSA6L98jO8ZM-z4fMTpgdPUkPjC5Fwwfaa80jXbJglfCz_L5AjXqcK8ZaqKxIo7w/exec";
     
-    // PASSWORD ADMIN UNTUK AKSI STATUS
-    const ADMIN_PASSWORD = "admin2026";
+    // PASSWORD ADMIN UNTUK DASHBOARD & AKSI STATUS
+    const ADMIN_PASSWORD = "admin2027";
   </script>
 
   <div class="max-w-7xl mx-auto space-y-8">
     <!-- Judul Utama Halaman Awal -->
     <h1 class="text-3xl font-bold text-center text-gray-800">Sistem Work Order Aston Tanjungpinang</h1>
 
-    <!-- Form Input Work Order -->
+    <!-- Form Input Work Order (Terbuka Untuk Semua Pelapor) -->
     <div class="bg-white p-6 rounded-lg shadow-md">
       <h2 class="text-xl font-semibold mb-4 text-gray-700">Buat Work Order Baru</h2>
       <form id="woForm" onsubmit="submitWO(event)" class="space-y-4">
@@ -50,10 +50,20 @@
       </form>
     </div>
 
-    <!-- Dashboard Status Admin & Fitur Laporan -->
-    <div class="bg-white p-6 rounded-lg shadow-md">
-      <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-2">
-        <h2 class="text-xl font-semibold text-gray-700">Daftar Work Order</h2>
+    <!-- Area Tombol Akses Admin -->
+    <div id="adminLoginArea" class="text-center pt-2">
+      <button onclick="unlockAdminDashboard()" class="bg-slate-800 text-white px-5 py-2.5 rounded-md hover:bg-slate-900 font-medium text-sm shadow transition duration-200">
+        🔐 Buka Dashboard Admin / Daftar Work Order
+      </button>
+    </div>
+
+    <!-- Dashboard Status Admin (TERSEMBUNYI SECARA DEFAULT) -->
+    <div id="adminDashboard" class="hidden bg-white p-6 rounded-lg shadow-md space-y-4 border-2 border-blue-500">
+      <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-2 border-b pb-3">
+        <div>
+          <h2 class="text-xl font-semibold text-gray-800">Daftar Work Order (Khusus Tim Admin)</h2>
+          <p class="text-xs text-gray-500">Akses Admin Aktif</p>
+        </div>
         <div class="flex space-x-2">
           <button onclick="openReportModal()" class="bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700 text-sm font-medium">
             📄 Cetak Laporan Bulanan
@@ -61,8 +71,12 @@
           <button onclick="loadData()" class="bg-gray-200 text-gray-700 px-3 py-1.5 rounded hover:bg-gray-300 text-sm font-medium">
             Refresh Data
           </button>
+          <button onclick="lockAdminDashboard()" class="bg-red-600 text-white px-3 py-1.5 rounded hover:bg-red-700 text-sm font-medium">
+            🔒 Kunci Dashboard
+          </button>
         </div>
       </div>
+      
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
           <thead>
@@ -81,7 +95,7 @@
             </tr>
           </thead>
           <tbody id="tableBody">
-            <tr><td colspan="11" class="text-center p-4">Memuat data...</td></tr>
+            <tr><td colspan="11" class="text-center p-4">Klik Refresh Data untuk memuat...</td></tr>
           </tbody>
         </table>
       </div>
@@ -113,8 +127,31 @@
 
   <script>
     let globalWOData = [];
+    let isAdminUnlocked = false;
+
+    function unlockAdminDashboard() {
+      const pwd = prompt("Masukkan Password Admin:");
+      if (pwd === null) return;
+      
+      if (pwd === ADMIN_PASSWORD) {
+        isAdminUnlocked = true;
+        document.getElementById("adminDashboard").classList.remove("hidden");
+        document.getElementById("adminLoginArea").classList.add("hidden");
+        loadData();
+      } else {
+        alert("Password Admin Salah! Akses ditolak.");
+      }
+    }
+
+    function lockAdminDashboard() {
+      isAdminUnlocked = false;
+      document.getElementById("adminDashboard").classList.add("hidden");
+      document.getElementById("adminLoginArea").classList.remove("hidden");
+    }
 
     async function loadData() {
+      if (!isAdminUnlocked) return;
+      
       const tbody = document.getElementById("tableBody");
       if (!tbody) return;
       tbody.innerHTML = '<tr><td colspan="11" class="text-center p-4">Memuat data...</td></tr>';
@@ -198,7 +235,9 @@
 
         document.getElementById("woForm").reset();
         alert("Work Order berhasil dikirim!");
-        setTimeout(loadData, 2000);
+        if (isAdminUnlocked) {
+          setTimeout(loadData, 2000);
+        }
       } catch (err) {
         alert("Gagal mengirim Work Order: " + err);
       } finally {
@@ -208,14 +247,6 @@
     }
 
     async function updateStatus(id, newStatus, currentPic, currentTimeSolving, currentRemark) {
-      const inputPassword = prompt('Aksi Admin [Ubah Status ke "' + newStatus + '"]: Masukkan Password Admin:');
-      if (inputPassword === null) return;
-
-      if (inputPassword !== ADMIN_PASSWORD) {
-        alert("Password Admin Salah! Akses ditolak.");
-        return;
-      }
-
       let inputPic = currentPic || '-';
       let inputTime = currentTimeSolving || '-';
       let inputRemark = currentRemark || '-';
@@ -469,8 +500,6 @@
       printWin.document.close();
       closeReportModal();
     }
-
-    loadData();
   </script>
 </body>
 </html>
