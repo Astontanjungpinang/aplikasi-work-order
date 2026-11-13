@@ -10,9 +10,9 @@
 
   <script>
     // URL GOOGLE APPS SCRIPT
-    const API_URL = "https://script.google.com/macros/s/AKfycbydOwwSA6L98jO8ZM-z4fMTpgdPUkPjC5Fwwfaa80jXbJglfCz_L5AjXqcK8ZaqKxIo7w/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbyJEFYg1IHwE3ctLHZNAa8hRqtl6qhVxFpKIVCTtvRlCw9ImTzhLultV13KemkMHyEdDg/exec";
     
-    // PASSWORD ADMIN UNTUK DASHBOARD & AKSI STATUS
+    // PASSWORD ADMIN
     const ADMIN_PASSWORD = "admin2027";
   </script>
 
@@ -48,6 +48,35 @@
         </div>
         <button type="submit" id="btnSubmit" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 font-medium">Kirim Work Order</button>
       </form>
+    </div>
+
+    <!-- Fitur Tracking / Lacak Status Work Order Untuk Pelapor -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+      <h2 class="text-lg font-semibold mb-3 text-gray-700">🔍 Lacak Progres Work Order Anda</h2>
+      <div class="flex flex-col sm:flex-row gap-2">
+        <input type="text" id="searchQuery" placeholder="Masukkan Nama Pelapor atau ID Tiket (contoh: WO-179...)" class="flex-1 p-2 border rounded-md text-sm">
+        <button onclick="trackUserWO()" id="btnTrack" class="bg-indigo-600 text-white px-5 py-2 rounded-md hover:bg-indigo-700 text-sm font-medium">
+          Cek Status
+        </button>
+      </div>
+      
+      <!-- Hasil Pencarian Pelapor -->
+      <div id="trackResultArea" class="hidden mt-4 overflow-x-auto">
+        <table class="w-full text-left border-collapse border">
+          <thead>
+            <tr class="bg-gray-50 border-b text-xs">
+              <th class="p-2.5 font-semibold">ID Tiket</th>
+              <th class="p-2.5 font-semibold">Tanggal</th>
+              <th class="p-2.5 font-semibold">Lokasi</th>
+              <th class="p-2.5 font-semibold">Deskripsi</th>
+              <th class="p-2.5 font-semibold">Status</th>
+              <th class="p-2.5 font-semibold">PIC Teknisi</th>
+              <th class="p-2.5 font-semibold">Keterangan / Remark</th>
+            </tr>
+          </thead>
+          <tbody id="trackTableBody" class="text-sm"></tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Area Tombol Akses Admin -->
@@ -128,6 +157,66 @@
   <script>
     let globalWOData = [];
     let isAdminUnlocked = false;
+
+    // Fungsi Pelacakan Khusus User/Pelapor
+    async function trackUserWO() {
+      const query = document.getElementById("searchQuery").value.trim().toLowerCase();
+      if (!query) {
+        alert("Silakan masukkan Nama Pelapor atau ID Tiket terlebih dahulu.");
+        return;
+      }
+
+      const btn = document.getElementById("btnTrack");
+      const resultArea = document.getElementById("trackResultArea");
+      const tbody = document.getElementById("trackTableBody");
+
+      btn.innerText = "Mencari...";
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(API_URL + "?t=" + new Date().getTime());
+        const data = await res.json();
+
+        const filtered = data.filter(row => {
+          const idMatch = (row.id || "").toLowerCase().includes(query);
+          const nameMatch = (row.pelapor || "").toLowerCase() === query;
+          return idMatch || nameMatch;
+        });
+
+        resultArea.classList.remove("hidden");
+        tbody.innerHTML = "";
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="p-3 text-center text-gray-500">Data tidak ditemukan. Pastikan penulisan Nama Pelapor sesuai dengan saat pengajuan.</td></tr>';
+          return;
+        }
+
+        filtered.reverse().forEach(row => {
+          let badgeBg = "bg-gray-500";
+          const st = (row.status || "Pending").trim();
+          if (st === "In Progress") badgeBg = "bg-yellow-500";
+          if (st === "Hold") badgeBg = "bg-orange-600";
+          if (st === "Completed") badgeBg = "bg-green-600";
+
+          const tr = document.createElement("tr");
+          tr.className = "border-b";
+          tr.innerHTML = 
+            '<td class="p-2.5 font-mono text-xs">' + (row.id || '-') + '</td>' +
+            '<td class="p-2.5 text-xs">' + (row.tanggal || '-') + '</td>' +
+            '<td class="p-2.5">' + (row.lokasi || '-') + '</td>' +
+            '<td class="p-2.5">' + (row.deskripsi || '-') + '</td>' +
+            '<td class="p-2.5"><span class="px-2 py-0.5 rounded text-xs text-white ' + badgeBg + '">' + st + '</span></td>' +
+            '<td class="p-2.5 font-medium text-blue-600">' + (row.pic || '-') + '</td>' +
+            '<td class="p-2.5 text-gray-600 italic">' + (row.remark || '-') + '</td>';
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        alert("Gagal mengecek status. Periksa koneksi internet.");
+      } finally {
+        btn.innerText = "Cek Status";
+        btn.disabled = false;
+      }
+    }
 
     function unlockAdminDashboard() {
       const pwd = prompt("Masukkan Password Admin:");
@@ -214,12 +303,13 @@
       e.preventDefault();
       
       const btn = document.getElementById("btnSubmit");
+      const pelaporName = document.getElementById("pelapor").value;
       btn.innerText = "Mengirim...";
       btn.disabled = true;
 
       const payload = {
         action: "create",
-        pelapor: document.getElementById("pelapor").value,
+        pelapor: pelaporName,
         lokasi: document.getElementById("lokasi").value,
         deskripsi: document.getElementById("deskripsi").value,
         prioritas: document.getElementById("prioritas").value
@@ -234,7 +324,8 @@
         });
 
         document.getElementById("woForm").reset();
-        alert("Work Order berhasil dikirim!");
+        alert("Work Order berhasil dikirim! Anda dapat memantau status pengerjaan di kolom 'Lacak Progres Work Order' menggunakan nama Anda (" + pelaporName + ").");
+        
         if (isAdminUnlocked) {
           setTimeout(loadData, 2000);
         }
