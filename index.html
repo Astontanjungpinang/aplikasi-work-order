@@ -9,9 +9,9 @@
 <body class="bg-gray-100 p-4 md:p-8">
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxxzPB7svY62OFz7q7u7uwBwR4TN1S-lmAQYpQwSGzsGEdoZRpHiYp9XEU6H7Y_7VwjuQ/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbzA9OMWYOhIAO2ywCCi4rp6BEIxQ13KDW0C3MgH8_TymJ-bkXUSvN4aF_HGNR2Vv6tEYQ/exec";
     const ADMIN_PASSWORD = "admin2027";
-    const PETUGAS_PASSWORD = "aston321"; // <-- PIN / Password khusus petugas FO, HK & Engineering
+    const PETUGAS_PASSWORD = "aston321";
   </script>
 
   <!-- ======================================================== -->
@@ -171,7 +171,7 @@
             <p class="text-xs text-gray-500">Akses Admin Aktif</p>
           </div>
           <div class="flex space-x-2">
-            <button onclick="openReportModal()" class="bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700 text-sm font-medium">📄 Cetak Laporan Bulanan</button>
+            <button onclick="openReportModal()" class="bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700 text-sm font-medium">📄 Cetak Laporan</button>
             <button onclick="loadData()" class="bg-gray-200 text-gray-700 px-3 py-1.5 rounded hover:bg-gray-300 text-sm font-medium">Refresh Data</button>
             <button onclick="lockAdminDashboard()" class="bg-red-600 text-white px-3 py-1.5 rounded hover:bg-red-700 text-sm font-medium">🔒 Kunci Dashboard</button>
           </div>
@@ -336,13 +336,25 @@
     </div>
   </div>
 
-  <!-- Modal Filter Laporan Bulanan WO -->
+  <!-- ======================================================== -->
+  <!-- MODAL FILTER LAPORAN WORK ORDER (DENGAN FILTER TGL 1-31) -->
+  <!-- ======================================================== -->
   <div id="reportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-lg p-6 max-w-md w-full space-y-4 shadow-xl">
-      <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Cetak Laporan Bulanan Work Order</h3>
+      <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Cetak Laporan Work Order</h3>
       <div>
         <label class="block text-sm font-medium text-gray-700">Pilih Bulan & Tahun</label>
-        <input type="month" id="reportMonth" class="w-full mt-1 p-2 border rounded-md">
+        <input type="month" id="reportMonth" onchange="syncDaysInMonth('reportMonth', 'reportDayStart', 'reportDayEnd')" class="w-full mt-1 p-2 border rounded-md">
+      </div>
+      <div class="grid grid-cols-2 gap-3 bg-blue-50 p-3 rounded-md border border-blue-100">
+        <div>
+          <label class="block text-xs font-semibold text-blue-900">Dari Tanggal</label>
+          <select id="reportDayStart" class="w-full mt-1 p-2 border rounded-md text-sm bg-white"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-blue-900">Sampai Tanggal</label>
+          <select id="reportDayEnd" class="w-full mt-1 p-2 border rounded-md text-sm bg-white"></select>
+        </div>
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700">Nama Admin / Pembuat Laporan</label>
@@ -359,13 +371,25 @@
     </div>
   </div>
 
-  <!-- Modal Filter Laporan KPI Room Division -->
+  <!-- ======================================================== -->
+  <!-- MODAL FILTER LAPORAN ROOM DIVISION (FILTER TGL 1-31)     -->
+  <!-- ======================================================== -->
   <div id="roomReportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-lg p-6 max-w-md w-full space-y-4 shadow-xl">
       <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Laporan & KPI Room Division (FO & HK)</h3>
       <div>
         <label class="block text-sm font-medium text-gray-700">Pilih Bulan & Tahun</label>
-        <input type="month" id="roomReportMonth" class="w-full mt-1 p-2 border rounded-md">
+        <input type="month" id="roomReportMonth" onchange="syncDaysInMonth('roomReportMonth', 'roomDayStart', 'roomDayEnd')" class="w-full mt-1 p-2 border rounded-md">
+      </div>
+      <div class="grid grid-cols-2 gap-3 bg-teal-50 p-3 rounded-md border border-teal-100">
+        <div>
+          <label class="block text-xs font-semibold text-teal-900">Dari Tanggal</label>
+          <select id="roomDayStart" class="w-full mt-1 p-2 border rounded-md text-sm bg-white"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-teal-900">Sampai Tanggal</label>
+          <select id="roomDayEnd" class="w-full mt-1 p-2 border rounded-md text-sm bg-white"></select>
+        </div>
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700">Dibuat Oleh (FO / HK Supervisor)</label>
@@ -389,9 +413,14 @@
     let compressedBase64Photo = "";
 
     window.addEventListener("DOMContentLoaded", () => {
+      // Isi pilihan tanggal 1 s/d 31 pada semua dropdown filter laporan
+      populateDayOptions("reportDayStart", 1);
+      populateDayOptions("reportDayEnd", 30);
+      populateDayOptions("roomDayStart", 1);
+      populateDayOptions("roomDayEnd", 30);
+
       const params = new URLSearchParams(window.location.search);
       const targetTab = params.get("tab");
-      // Mendukung baik ?tiket=RC-xxx maupun ?id=RC-xxx agar tidak gagal buka kartu tunggal
       const targetTiket = params.get("tiket") || params.get("id");
 
       if (targetTiket) {
@@ -403,6 +432,56 @@
         switchMainTab("room");
       }
     });
+
+    // Helper: Mengisi dropdown tanggal 1 s/d 31
+    function populateDayOptions(selectId, defaultVal) {
+      const sel = document.getElementById(selectId);
+      if (!sel) return;
+      sel.innerHTML = "";
+      for (let d = 1; d <= 31; d++) {
+        const opt = document.createElement("option");
+        opt.value = d;
+        opt.text = "Tanggal " + d;
+        if (d === defaultVal) opt.selected = true;
+        sel.appendChild(opt);
+      }
+    }
+
+    // Helper: Menyesuaikan tanggal akhir otomatis sesuai jumlah hari pada bulan yang dipilih (28/29/30/31)
+    function syncDaysInMonth(monthInputId, startSelectId, endSelectId) {
+      const val = document.getElementById(monthInputId).value;
+      if (!val) return;
+      const [year, month] = val.split("-").map(Number);
+      const lastDay = new Date(year, month, 0).getDate(); // 28, 29, 30, atau 31
+      document.getElementById(startSelectId).value = 1;
+      document.getElementById(endSelectId).value = lastDay;
+    }
+
+    // Helper: Parsing tanggal dari format Google Sheets ("dd/MM/yyyy, HH:mm:ss" atau ISO Date)
+    function parseSheetDateParts(dateStr) {
+      if (!dateStr) return null;
+      const str = String(dateStr).trim();
+      const firstPart = str.split(",")[0].trim();
+      if (firstPart.includes("/")) {
+        const parts = firstPart.split("/");
+        if (parts.length === 3) {
+          return {
+            day: parseInt(parts[0], 10),
+            month: parseInt(parts[1], 10),
+            year: parseInt(parts[2], 10)
+          };
+        }
+      }
+      const d = new Date(str);
+      if (!isNaN(d.getTime())) {
+        return {
+          day: d.getDate(),
+          month: d.getMonth() + 1,
+          year: d.getFullYear()
+        };
+      }
+      return null;
+    }
 
     // ==========================================
     // MODE FOKUS PETUGAS (LAYAR TUNGGAL KHUSUS)
@@ -694,9 +773,14 @@
       } catch (err) { alert("Gagal mengirim data: " + err); } finally { btn.innerText = "📢 Kirim Info & Notifikasi WA"; btn.disabled = false; }
     }
 
+    // ==========================================
+    // LAPORAN & ANALISIS KPI ROOM DIVISION
+    // ==========================================
     function openRoomReportModal() {
       const now = new Date();
-      document.getElementById("roomReportMonth").value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      document.getElementById("roomReportMonth").value = monthStr;
+      syncDaysInMonth("roomReportMonth", "roomDayStart", "roomDayEnd");
       document.getElementById("roomReportModal").classList.remove("hidden");
     }
     function closeRoomReportModal() { document.getElementById("roomReportModal").classList.add("hidden"); }
@@ -722,13 +806,28 @@
 
     function generateRoomReport() {
       const monthVal = document.getElementById("roomReportMonth").value;
+      const dayStart = parseInt(document.getElementById("roomDayStart").value, 10);
+      const dayEnd = parseInt(document.getElementById("roomDayEnd").value, 10);
       const creatorName = document.getElementById("roomCreatorName").value || "Room Division Supervisor";
       const managerName = document.getElementById("roomManagerName").value || "Room Division Manager";
+
       if (!monthVal) return alert("Pilih bulan dan tahun terlebih dahulu.");
-      const [year, month] = monthVal.split('-');
-      const filtered = globalRoomData.filter(row => { if (!row.tanggal) return false; const datePart = row.tanggal.split(",")[0].split("/"); if (datePart.length === 3) return parseInt(datePart[2]) == parseInt(year) && parseInt(datePart[1]) == parseInt(month); return true; });
+      if (dayStart > dayEnd) return alert("Tanggal awal tidak boleh lebih besar dari tanggal akhir.");
+
+      const [year, month] = monthVal.split('-').map(Number);
+
+      // Filter berdasarkan Tahun, Bulan, dan Rentang Tanggal (dayStart s/d dayEnd)
+      const filtered = globalRoomData.filter(row => {
+        const parsed = parseSheetDateParts(row.tanggal);
+        if (!parsed) return false;
+        return parsed.year === year &&
+               parsed.month === month &&
+               parsed.day >= dayStart &&
+               parsed.day <= dayEnd;
+      });
+
       const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-      const periodTitle = monthNames[parseInt(month) - 1] + " " + year;
+      const periodTitle = `Tanggal ${dayStart} s/d ${dayEnd} ${monthNames[month - 1]} ${year}`;
       const totalCase = filtered.length;
       const resolvedCase = filtered.filter(r => (r.status || '').trim() === 'Resolved').length;
       const progressCase = filtered.filter(r => (r.status || '').trim() === 'Follow Up').length;
@@ -768,10 +867,13 @@
         detailRowsHTML += `<tr style="border-bottom: 1px solid #ddd;"><td style="padding: 5px;">${idx + 1}</td><td style="padding: 5px; font-weight: bold;">${item.kamar || '-'}</td><td style="padding: 5px;">${item.dari || '-'}</td><td style="padding: 5px;"><b>${item.kategori || '-'}</b><br>${item.detail || '-'}</td><td style="padding: 5px;">${item.status || '-'}</td><td style="padding: 5px;">${item.pic || '-'}</td><td style="padding: 5px;">Mulai: ${item.waktuMulai || '-'}<br>Selesai: ${item.waktuSelesai || '-'}</td><td style="padding: 5px; font-weight: bold; color: #6d28d9;">${item.durasi || '-'}</td><td style="padding: 5px; font-style: italic;">${item.catatan || '-'}</td></tr>`;
       });
 
-      const reportHTML = `<!DOCTYPE html><html><head><title>KPI Room Division - ${periodTitle}</title><style>body { font-family: Arial, sans-serif; padding: 20px; color: #333; } h1, h2, h3 { margin: 2px 0; } .header-flex { border-bottom: 2px solid #0f766e; padding-bottom: 10px; margin-bottom: 15px; } .kpi-container { display: flex; gap: 10px; margin: 15px 0; } .kpi-card { flex: 1; border: 1px solid #ccc; padding: 10px; border-radius: 6px; text-align: center; background: #f8fafc; } table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 10px; } th { background-color: #f1f5f9; padding: 6px; border-bottom: 2px solid #cbd5e1; text-align: left; } .signature-area { margin-top: 35px; display: flex; justify-content: space-between; } .sig-box { width: 40%; text-align: center; font-size: 12px; } .btn-print { background: #0f766e; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-bottom: 15px; } @media print { .btn-print { display: none; } }</style></head><body><button class="btn-print" onclick="window.print()">🖨️ Cetak Summary & KPI (PDF)</button><div class="header-flex"><h1 style="color: #0f766e;">SUMMARY & KPI KOORDINASI ROOM DIVISION (FO & HK)</h1><h3 style="color: #555;">ASTON Tanjung Pinang Hotel & Conference Center</h3><p style="margin: 4px 0 0 0; font-size: 13px;"><b>Periode Laporan:</b> ${periodTitle}</p></div><div class="kpi-container"><div class="kpi-card"><h4>TOTAL KELUHAN</h4><p>${totalCase}</p></div><div class="kpi-card"><h4>SELESAI</h4><p style="color: green;">${resolvedCase}</p></div><div class="kpi-card"><h4>PROSES</h4><p style="color: #d97706;">${progressCase}</p></div><div class="kpi-card"><h4>OPEN</h4><p style="color: #dc2626;">${openCase}</p></div><div class="kpi-card"><h4>RATA-RATA DURASI</h4><p style="color: #6d28d9;">${avgResolutionTime}</p></div></div><table><thead><tr><th>Rank</th><th>Kategori Masalah</th><th>Frekuensi</th><th>Persentase</th></tr></thead><tbody>${categoryRowsHTML}</tbody></table><br><table><thead><tr><th>No</th><th>Nama PIC</th><th>Total Handle</th><th>Tuntas</th><th>Rata-Rata Durasi</th></tr></thead><tbody>${picRowsHTML}</tbody></table><br><table><thead><tr><th>No</th><th>Kamar</th><th>Departemen</th><th>Kategori & Detail</th><th>Status</th><th>PIC</th><th>Waktu Handle & Selesai</th><th>Durasi</th><th>Catatan</th></tr></thead><tbody>${detailRowsHTML}</tbody></table><div class="signature-area"><div class="sig-box"><p>Dibuat Oleh,</p><br><br><br><p><b><u>${creatorName}</u></b><br>Room Division Supervisor</p></div><div class="sig-box"><p>Disetujui Oleh,</p><br><br><br><p><b><u>${managerName}</u></b><br>Room Division Manager</p></div></div></body></html>`;
+      const reportHTML = `<!DOCTYPE html><html><head><title>KPI Room Division - ${periodTitle}</title><style>body { font-family: Arial, sans-serif; padding: 20px; color: #333; } h1, h2, h3 { margin: 2px 0; } .header-flex { border-bottom: 2px solid #0f766e; padding-bottom: 10px; margin-bottom: 15px; } .kpi-container { display: flex; gap: 10px; margin: 15px 0; } .kpi-card { flex: 1; border: 1px solid #ccc; padding: 10px; border-radius: 6px; text-align: center; background: #f8fafc; } table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 10px; } th { background-color: #f1f5f9; padding: 6px; border-bottom: 2px solid #cbd5e1; text-align: left; } .signature-area { margin-top: 35px; display: flex; justify-content: space-between; } .sig-box { width: 40%; text-align: center; font-size: 12px; } .btn-print { background: #0f766e; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-bottom: 15px; } @media print { .btn-print { display: none; } }</style></head><body><button class="btn-print" onclick="window.print()">🖨️ Cetak Summary & KPI (PDF)</button><div class="header-flex"><h1 style="color: #0f766e;">SUMMARY & KPI KOORDINASI ROOM DIVISION (FO & HK)</h1><h3 style="color: #555;">ASTON Tanjung Pinang Hotel & Conference Center</h3><p style="margin: 4px 0 0 0; font-size: 13px;"><b>Periode Laporan:</b> ${periodTitle}</p></div><div class="kpi-container"><div class="kpi-card"><h4>TOTAL KELUHAN</h4><p>${totalCase}</p></div><div class="kpi-card"><h4>SELESAI</h4><p style="color: green;">${resolvedCase}</p></div><div class="kpi-card"><h4>PROSES</h4><p style="color: #d97706;">${progressCase}</p></div><div class="kpi-card"><h4>OPEN</h4><p style="color: #dc2626;">${openCase}</p></div><div class="kpi-card"><h4>RATA-RATA DURASI</h4><p style="color: #6d28d9;">${avgResolutionTime}</p></div></div><table><thead><tr><th>Rank</th><th>Kategori Masalah</th><th>Frekuensi</th><th>Persentase</th></tr></thead><tbody>${categoryRowsHTML || '<tr><td colspan="4" style="padding:8px; text-align:center;">Tidak ada data pada rentang tanggal ini.</td></tr>'}</tbody></table><br><table><thead><tr><th>No</th><th>Nama PIC</th><th>Total Handle</th><th>Tuntas</th><th>Rata-Rata Durasi</th></tr></thead><tbody>${picRowsHTML || '<tr><td colspan="5" style="padding:8px; text-align:center;">Belum ada PIC tercatat.</td></tr>'}</tbody></table><br><table><thead><tr><th>No</th><th>Kamar</th><th>Departemen</th><th>Kategori & Detail</th><th>Status</th><th>PIC</th><th>Waktu Handle & Selesai</th><th>Durasi</th><th>Catatan</th></tr></thead><tbody>${detailRowsHTML || '<tr><td colspan="9" style="padding:8px; text-align:center;">Tidak ada data pada rentang tanggal ini.</td></tr>'}</tbody></table><div class="signature-area"><div class="sig-box"><p>Dibuat Oleh,</p><br><br><br><p><b><u>${creatorName}</u></b><br>Room Division Supervisor</p></div><div class="sig-box"><p>Disetujui Oleh,</p><br><br><br><p><b><u>${managerName}</u></b><br>Room Division Manager</p></div></div></body></html>`;
       const printWin = window.open('', '_blank'); printWin.document.write(reportHTML); printWin.document.close(); closeRoomReportModal();
     }
 
+    // ==========================================
+    // FUNGSI WORK ORDER (EXISTING + FILTER TGL)
+    // ==========================================
     async function trackUserWO() {
       const query = document.getElementById("searchQuery").value.trim().toLowerCase();
       if (!query) return alert("Silakan masukkan Nama Pelapor atau ID Tiket.");
@@ -843,23 +945,53 @@
       } catch (err) { alert("Gagal memperbarui status."); }
     }
 
-    function openReportModal() { const now = new Date(); document.getElementById("reportMonth").value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`; document.getElementById("reportModal").classList.remove("hidden"); }
+    function openReportModal() {
+      const now = new Date();
+      const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      document.getElementById("reportMonth").value = monthStr;
+      syncDaysInMonth("reportMonth", "reportDayStart", "reportDayEnd");
+      document.getElementById("reportModal").classList.remove("hidden");
+    }
     function closeReportModal() { document.getElementById("reportModal").classList.add("hidden"); }
+
     function generateReport() {
-      const monthVal = document.getElementById("reportMonth").value, adminName = document.getElementById("adminName").value || "Admin Maintenance", managerName = document.getElementById("managerName").value || "Manager";
+      const monthVal = document.getElementById("reportMonth").value;
+      const dayStart = parseInt(document.getElementById("reportDayStart").value, 10);
+      const dayEnd = parseInt(document.getElementById("reportDayEnd").value, 10);
+      const adminName = document.getElementById("adminName").value || "Admin Maintenance";
+      const managerName = document.getElementById("managerName").value || "Manager";
+
       if (!monthVal) return alert("Pilih bulan dan tahun terlebih dahulu.");
-      const [year, month] = monthVal.split('-');
-      const monthlyData = globalWOData.filter(row => { if (!row.tanggal) return false; const d = new Date(row.tanggal); if (isNaN(d.getTime())) return true; return d.getFullYear() == parseInt(year) && (d.getMonth() + 1) == parseInt(month); });
+      if (dayStart > dayEnd) return alert("Tanggal awal tidak boleh lebih besar dari tanggal akhir.");
+
+      const [year, month] = monthVal.split('-').map(Number);
+
+      // Filter berdasarkan Tahun, Bulan, dan Rentang Tanggal (dayStart s/d dayEnd)
+      const filteredData = globalWOData.filter(row => {
+        const parsed = parseSheetDateParts(row.tanggal);
+        if (!parsed) return false;
+        return parsed.year === year &&
+               parsed.month === month &&
+               parsed.day >= dayStart &&
+               parsed.day <= dayEnd;
+      });
+
       const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-      const periodTitle = monthNames[parseInt(month) - 1] + " " + year;
-      const totalWO = monthlyData.length, completedWO = monthlyData.filter(r => (r.status || '').trim() === 'Completed').length, progressWO = monthlyData.filter(r => (r.status || '').trim() === 'In Progress').length, holdWO = monthlyData.filter(r => (r.status || '').trim() === 'Hold').length, pendingWO = monthlyData.filter(r => (r.status || '').trim() === 'Pending' || !r.status).length;
+      const periodTitle = `Tanggal ${dayStart} s/d ${dayEnd} ${monthNames[month - 1]} ${year}`;
+      const totalWO = filteredData.length;
+      const completedWO = filteredData.filter(r => (r.status || '').trim() === 'Completed').length;
+      const progressWO = filteredData.filter(r => (r.status || '').trim() === 'In Progress').length;
+      const holdWO = filteredData.filter(r => (r.status || '').trim() === 'Hold').length;
+      const pendingWO = filteredData.filter(r => (r.status || '').trim() === 'Pending' || !r.status).length;
       const completionRate = totalWO > 0 ? ((completedWO / totalWO) * 100).toFixed(1) : 0;
+
       let rowsHTML = "";
-      monthlyData.forEach((item, index) => {
+      filteredData.forEach((item, index) => {
         const st = (item.status || 'Pending').trim();
         rowsHTML += `<tr style="border-bottom: 1px solid #ddd;"><td style="padding: 6px;">${index + 1}</td><td style="padding: 6px;">${item.id || '-'}</td><td style="padding: 6px;">${item.tanggal || '-'}</td><td style="padding: 6px;">${item.pelapor || '-'}</td><td style="padding: 6px;">${item.lokasi || '-'}</td><td style="padding: 6px;">${item.deskripsi || '-'}</td><td style="padding: 6px;">${item.prioritas || '-'}</td><td style="padding: 6px; font-weight: bold;">${st}</td><td style="padding: 6px;">${item.pic || '-'}</td><td style="padding: 6px;">${item.timeSolving || '-'}</td><td style="padding: 6px;">${item.remark || '-'}</td></tr>`;
       });
-      const reportHTML = `<!DOCTYPE html><html><head><title>Laporan WO - ${periodTitle}</title><style>body { font-family: Arial, sans-serif; padding: 20px; } table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; } th { background-color: #f2f2f2; padding: 6px; border-bottom: 2px solid #ccc; text-align: left; } .signature-area { margin-top: 35px; display: flex; justify-content: space-between; } .sig-box { width: 40%; text-align: center; } @media print { .btn-print { display: none; } }</style></head><body><button class="btn-print" onclick="window.print()">🖨️ Cetak PDF</button><h1>LAPORAN REKAPITULASI WORK ORDER (${periodTitle})</h1><h3>ASTON Tanjung Pinang Hotel & Conference Center</h3><p>Total: ${totalWO} | Selesai: ${completedWO} (${completionRate}%) | Proses: ${progressWO} | Hold: ${holdWO} | Pending: ${pendingWO}</p><table><thead><tr><th>No</th><th>ID</th><th>Tanggal</th><th>Pelapor</th><th>Lokasi</th><th>Deskripsi</th><th>Prioritas</th><th>Status</th><th>PIC</th><th>Time Solving</th><th>Remark</th></tr></thead><tbody>${rowsHTML}</tbody></table><div class="signature-area"><div class="sig-box"><p>Dibuat Oleh,</p><br><br><br><p><b><u>${adminName}</u></b></p></div><div class="sig-box"><p>Disetujui Oleh,</p><br><br><br><p><b><u>${managerName}</u></b></p></div></div></body></html>`;
+
+      const reportHTML = `<!DOCTYPE html><html><head><title>Laporan WO - ${periodTitle}</title><style>body { font-family: Arial, sans-serif; padding: 20px; } table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; } th { background-color: #f2f2f2; padding: 6px; border-bottom: 2px solid #ccc; text-align: left; } .signature-area { margin-top: 35px; display: flex; justify-content: space-between; } .sig-box { width: 40%; text-align: center; } @media print { .btn-print { display: none; } }</style></head><body><button class="btn-print" onclick="window.print()">🖨️ Cetak PDF</button><h1>LAPORAN REKAPITULASI WORK ORDER</h1><h3>ASTON Tanjung Pinang Hotel & Conference Center</h3><p><b>Periode:</b> ${periodTitle}</p><p>Total: ${totalWO} | Selesai: ${completedWO} (${completionRate}%) | Proses: ${progressWO} | Hold: ${holdWO} | Pending: ${pendingWO}</p><table><thead><tr><th>No</th><th>ID</th><th>Tanggal</th><th>Pelapor</th><th>Lokasi</th><th>Deskripsi</th><th>Prioritas</th><th>Status</th><th>PIC</th><th>Time Solving</th><th>Remark</th></tr></thead><tbody>${rowsHTML || '<tr><td colspan="11" style="padding:8px; text-align:center;">Tidak ada data Work Order pada rentang tanggal ini.</td></tr>'}</tbody></table><div class="signature-area"><div class="sig-box"><p>Dibuat Oleh,</p><br><br><br><p><b><u>${adminName}</u></b></p></div><div class="sig-box"><p>Disetujui Oleh,</p><br><br><br><p><b><u>${managerName}</u></b></p></div></div></body></html>`;
       const printWin = window.open('', '_blank'); printWin.document.write(reportHTML); printWin.document.close(); closeReportModal();
     }
   </script>
