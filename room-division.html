@@ -13,9 +13,9 @@
 <body class="bg-slate-50 text-slate-800 min-h-screen">
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyHFp4dQ8JkzBdwgf8xC_0U5IZZ7dPWWYMN3NH-DVp5u8AgddRnivDGpEUfR4Q0cPRRpg/exec";
-    const HK_PASSWORD = "hk2026";
-    const ENG_PASSWORD = "eng123456";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwEJcYwv5EomEouuNZRJa9WnaR_emsa45qvaVtAWx__HbQ96qE06wT3GZbE0r5HACkGSw/exec";
+    const HK_PASSWORD = "hk@2026";
+    const ENG_PASSWORD = "eng@123";
   </script>
 
   <!-- ======================================================== -->
@@ -121,38 +121,41 @@
       </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-5">
       
-      <!-- LIVE KPI STRIP -->
+      <!-- LIVE KPI STRIP (KLIK KARTU UNTUK MEMBUKA & MEMFILTER LIVE BOARD) -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <button type="button" onclick="openBoardWithStatus('ALL')" title="Klik untuk melihat semua tiket di Live Board" class="text-left bg-white p-4 rounded-xl border border-slate-200 hover:border-slate-400 shadow-sm hover:shadow transition flex items-center justify-between">
           <div>
             <p class="text-xs font-semibold text-slate-500 uppercase">Total Tiket</p>
             <p id="kpiTotal" class="text-2xl font-extrabold text-slate-900 mt-0.5">0</p>
           </div>
           <div class="w-10 h-10 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center text-lg">📋</div>
-        </div>
-        <div class="bg-white p-4 rounded-xl border-l-4 border-l-rose-500 border border-slate-200 shadow-sm flex items-center justify-between">
+        </button>
+
+        <button type="button" onclick="openBoardWithStatus('Open')" title="Klik untuk melihat tiket Open" class="text-left bg-white p-4 rounded-xl border-l-4 border-l-rose-500 border border-slate-200 hover:border-rose-400 shadow-sm hover:shadow transition flex items-center justify-between">
           <div>
             <p class="text-xs font-semibold text-rose-600 uppercase">Menunggu (Open)</p>
             <p id="kpiOpen" class="text-2xl font-extrabold text-rose-600 mt-0.5">0</p>
           </div>
           <div class="w-10 h-10 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center text-lg">🚨</div>
-        </div>
-        <div class="bg-white p-4 rounded-xl border-l-4 border-l-amber-500 border border-slate-200 shadow-sm flex items-center justify-between">
+        </button>
+
+        <button type="button" onclick="openBoardWithStatus('Follow Up')" title="Klik untuk melihat tiket Follow Up" class="text-left bg-white p-4 rounded-xl border-l-4 border-l-amber-500 border border-slate-200 hover:border-amber-400 shadow-sm hover:shadow transition flex items-center justify-between">
           <div>
             <p class="text-xs font-semibold text-amber-600 uppercase">Diproses (Follow Up)</p>
             <p id="kpiProgress" class="text-2xl font-extrabold text-amber-600 mt-0.5">0</p>
           </div>
           <div class="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-lg">⏳</div>
-        </div>
-        <div class="bg-white p-4 rounded-xl border-l-4 border-l-emerald-500 border border-slate-200 shadow-sm flex items-center justify-between">
+        </button>
+
+        <button type="button" onclick="openBoardWithStatus('Resolved')" title="Klik untuk melihat tiket Resolved" class="text-left bg-white p-4 rounded-xl border-l-4 border-l-emerald-500 border border-slate-200 hover:border-emerald-400 shadow-sm hover:shadow transition flex items-center justify-between">
           <div>
             <p class="text-xs font-semibold text-emerald-600 uppercase">Selesai (Resolved)</p>
             <p id="kpiResolved" class="text-2xl font-extrabold text-emerald-600 mt-0.5">0</p>
           </div>
           <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">✅</div>
-        </div>
+        </button>
       </div>
 
       <!-- FORM INPUT KOORDINASI -->
@@ -214,51 +217,77 @@
         </form>
       </div>
 
-      <!-- LIVE BOARD DENGAN FILTER CEPAT & PENCARIAN -->
-      <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-b border-slate-100 pb-4">
-          <div>
-            <h2 class="text-lg font-bold text-slate-900">📋 Live Board Koordinasi Room Division</h2>
-            <p class="text-xs text-slate-500">Pantau status real-time atau klik <b>⚡ Tindakan</b> untuk memperbarui progres tiket.</p>
+      <!-- COLLAPSIBLE LIVE BOARD (DEFAULT TERSEMBUNYI AGAR LAYAR AWAL RAPI) -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        
+        <!-- BAR HEADER PEMBUKA / PENUTUP LIVE BOARD -->
+        <div onclick="toggleLiveBoard()" class="p-4 sm:px-6 bg-slate-900 hover:bg-slate-800 text-white cursor-pointer flex flex-wrap justify-between items-center gap-3 transition select-none">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-base">
+              📋
+            </div>
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <h2 class="text-sm sm:text-base font-bold text-white">Live Board Koordinasi Room Division</h2>
+                <span id="liveBoardActiveBadge" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-700 text-amber-300 border border-slate-600">
+                  Memuat status...
+                </span>
+              </div>
+              <p class="text-[11px] text-slate-400">Klik bar ini untuk memantau status tiket, mencari kamar, atau memperbarui tindakan petugas.</p>
+            </div>
           </div>
-          
-          <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-            <input type="text" id="boardSearchInput" onkeyup="applyBoardFilters()" placeholder="Cari kamar / keluhan / PIC..." class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs w-full sm:w-48 focus:ring-2 focus:ring-teal-500">
-            <select id="boardFilterStatus" onchange="applyBoardFilters()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-semibold text-slate-700">
-              <option value="ALL">Semua Status</option>
-              <option value="Open">🔴 Open</option>
-              <option value="Follow Up">🟡 Follow Up</option>
-              <option value="Resolved">🟢 Resolved</option>
-            </select>
-            <select id="boardFilterDept" onchange="applyBoardFilters()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-semibold text-slate-700">
-              <option value="ALL">Semua Dept Tujuan</option>
-              <option value="Housekeeping">Housekeeping (HK)</option>
-              <option value="Engineering">Engineering</option>
-            </select>
-            <button onclick="loadRoomData()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition">
-              🔄 Refresh
-            </button>
+
+          <div class="flex items-center gap-2">
+            <span id="liveBoardToggleBtnText" class="px-3.5 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs shadow">
+              👁️ Tampilkan Live Board
+            </span>
           </div>
         </div>
 
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse">
-            <thead>
-              <tr class="bg-slate-50 border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-600">
-                <th class="p-3">Kamar / Waktu</th>
-                <th class="p-3">Alur Departemen</th>
-                <th class="p-3">Kategori & Detail Keluhan</th>
-                <th class="p-3">Status</th>
-                <th class="p-3">Durasi Penanganan</th>
-                <th class="p-3">PIC, Solusi & Bukti</th>
-                <th class="p-3 text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody id="roomTableBody" class="text-sm divide-y divide-slate-100">
-              <tr><td colspan="7" class="text-center p-6 text-slate-400">Memuat data koordinasi...</td></tr>
-            </tbody>
-          </table>
+        <!-- ISI LIVE BOARD (TERSEMBUNYI SECARA DEFAULT) -->
+        <div id="liveBoardCollapsibleBody" class="hidden p-6 space-y-4 border-t border-slate-200">
+          <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 pb-3 border-b border-slate-100">
+            <p class="text-xs text-slate-500">Klik tombol <b>⚡ Tindakan</b> pada baris tiket untuk mencatat respon atau penyelesaian.</p>
+            
+            <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+              <input type="text" id="boardSearchInput" onkeyup="applyBoardFilters()" placeholder="Cari kamar / keluhan / PIC..." class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs w-full sm:w-48 focus:ring-2 focus:ring-teal-500">
+              <select id="boardFilterStatus" onchange="applyBoardFilters()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-semibold text-slate-700">
+                <option value="ALL">Semua Status</option>
+                <option value="Open">🔴 Open</option>
+                <option value="Follow Up">🟡 Follow Up</option>
+                <option value="Resolved">🟢 Resolved</option>
+              </select>
+              <select id="boardFilterDept" onchange="applyBoardFilters()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-semibold text-slate-700">
+                <option value="ALL">Semua Dept Tujuan</option>
+                <option value="Housekeeping">Housekeeping (HK)</option>
+                <option value="Engineering">Engineering</option>
+              </select>
+              <button type="button" onclick="loadRoomData()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition">
+                🔄 Refresh
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-600">
+                  <th class="p-3">Kamar / Waktu</th>
+                  <th class="p-3">Alur Departemen</th>
+                  <th class="p-3">Kategori & Detail Keluhan</th>
+                  <th class="p-3">Status</th>
+                  <th class="p-3">Durasi Penanganan</th>
+                  <th class="p-3">PIC, Solusi & Bukti</th>
+                  <th class="p-3 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="roomTableBody" class="text-sm divide-y divide-slate-100">
+                <tr><td colspan="7" class="text-center p-6 text-slate-400">Memuat data koordinasi...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
+
       </div>
 
     </main>
@@ -381,6 +410,35 @@
     let globalRoomData = [];
     let compressedBase64Photo = "";
     let compressedComplaintPhoto = "";
+    let isLiveBoardOpen = false;
+
+    // Fungsi Buka / Tutup Live Board (Opsi 1)
+    function toggleLiveBoard(forceState) {
+      const bodyEl = document.getElementById("liveBoardCollapsibleBody");
+      const btnTextEl = document.getElementById("liveBoardToggleBtnText");
+      if (!bodyEl || !btnTextEl) return;
+
+      isLiveBoardOpen = typeof forceState === "boolean" ? forceState : !isLiveBoardOpen;
+
+      if (isLiveBoardOpen) {
+        bodyEl.classList.remove("hidden");
+        btnTextEl.innerText = "🔼 Sembunyikan Live Board";
+        btnTextEl.className = "px-3.5 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-amber-300 font-bold text-xs border border-slate-600 transition";
+      } else {
+        bodyEl.classList.add("hidden");
+        btnTextEl.innerText = "👁️ Tampilkan Live Board";
+        btnTextEl.className = "px-3.5 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs shadow transition";
+      }
+    }
+
+    // Membuka Live Board otomatis saat pengguna mengklik kartu KPI di bagian atas
+    function openBoardWithStatus(statusFilter) {
+      const statusSelect = document.getElementById("boardFilterStatus");
+      if (statusSelect) statusSelect.value = statusFilter;
+      applyBoardFilters();
+      toggleLiveBoard(true);
+      document.getElementById("liveBoardCollapsibleBody").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
 
     function validateDepartmentPin(tujuan, inputPwd) {
       const dept = String(tujuan || "Housekeeping (HK)");
@@ -692,10 +750,27 @@
         const data = await res.json();
         globalRoomData = Array.isArray(data) ? data : [];
 
+        const openCnt = globalRoomData.filter(r => (r.status || "Open").trim() === "Open").length;
+        const progressCnt = globalRoomData.filter(r => (r.status || "").trim() === "Follow Up").length;
+        const resolvedCnt = globalRoomData.filter(r => (r.status || "").trim() === "Resolved").length;
+        const activeCnt = openCnt + progressCnt;
+
         document.getElementById("kpiTotal").innerText = globalRoomData.length;
-        document.getElementById("kpiOpen").innerText = globalRoomData.filter(r => (r.status || "Open").trim() === "Open").length;
-        document.getElementById("kpiProgress").innerText = globalRoomData.filter(r => (r.status || "").trim() === "Follow Up").length;
-        document.getElementById("kpiResolved").innerText = globalRoomData.filter(r => (r.status || "").trim() === "Resolved").length;
+        document.getElementById("kpiOpen").innerText = openCnt;
+        document.getElementById("kpiProgress").innerText = progressCnt;
+        document.getElementById("kpiResolved").innerText = resolvedCnt;
+
+        // Update lencana status pada bar header Live Board
+        const badgeEl = document.getElementById("liveBoardActiveBadge");
+        if (badgeEl) {
+          if (activeCnt > 0) {
+            badgeEl.innerText = `🔔 ${activeCnt} Tiket Aktif (${openCnt} Open, ${progressCnt} Proses)`;
+            badgeEl.className = "px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500 text-white animate-pulse";
+          } else {
+            badgeEl.innerText = `✔ Semua Tuntas (${globalRoomData.length} Riwayat)`;
+            badgeEl.className = "px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
+          }
+        }
 
         applyBoardFilters();
       } catch (err) {
