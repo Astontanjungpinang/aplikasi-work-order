@@ -3,1154 +3,184 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistem Operasional - Aston Tanjungpinang</title>
+  <title>Portal Operasional - ASTON Tanjungpinang</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
 </head>
-<body class="bg-gray-100 p-4 md:p-8">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwic5lwWPak_QaFlYchJEHjLU5IV7NUPNCII5EHfMR3_vga1SJ61rIn7Q7xQ5YbyhOKtA/exec";
-    
-    // Konfigurasi Password / PIN per Bagian
-    const ADMIN_PASSWORD = "admin123";
-    const HK_PASSWORD = "hk123";
-    const ENG_PASSWORD = "eng123";
+    const API_URL = "https://script.google.com/macros/s/AKfycbzY3RWYoYPmoTm9EbQth57_191JTE2tADs7K59ZSuaiH8G5MrT5p78VYJTFk3hTRqNXGQ/exec";
+
+    // Redirect otomatis jika link lama dari WhatsApp (/?tab=room&tiket=...) dibuka
+    (function checkLegacyRedirect() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("tiket") || params.get("id") || params.get("tab") === "room") {
+        window.location.replace("room-division.html" + window.location.search);
+      }
+    })();
   </script>
 
-  <!-- ======================================================== -->
-  <!-- MODE FOKUS PETUGAS (HANYA MUNCUL SAAT BUKA LINK DARI WA)  -->
-  <!-- ======================================================== -->
-  <div id="petugasFocusContainer" class="hidden max-w-md mx-auto mt-2">
-    <div id="petugasLoadingCard" class="bg-white rounded-xl p-6 shadow-lg text-center space-y-3">
-      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-600 mx-auto"></div>
-      <p class="text-sm font-semibold text-gray-600">Memuat detail tugas kamar...</p>
-    </div>
-
-    <div id="petugasTaskCard" class="hidden bg-white rounded-xl p-6 shadow-2xl border-t-4 border-teal-600 space-y-4">
-      <div class="border-b pb-3">
-        <div class="flex justify-between items-center">
-          <span id="pfTujuanBadge" class="text-xs font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-teal-100 text-teal-800">ASTON Tanjungpinang</span>
-          <span id="pfBadgeStatus" class="px-2.5 py-0.5 rounded-full text-xs font-semibold text-white bg-red-500">Open</span>
+  <!-- TOP NAVBAR ASTON NAVY & GOLD -->
+  <header class="bg-slate-900 text-white border-b-4 border-amber-500 shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-lg bg-amber-500 text-slate-950 font-extrabold flex items-center justify-center text-xl shadow">
+          A
         </div>
-        <h2 class="text-2xl font-bold text-gray-800 mt-1" id="pfTitleKamar">Kamar -</h2>
-        <p class="text-xs text-gray-500 mt-0.5" id="pfSubtitleInfo">-</p>
-      </div>
-
-      <div class="bg-amber-50 border border-amber-200 p-3.5 rounded-lg text-sm text-gray-800 space-y-2">
-        <p class="font-bold text-xs text-amber-800 uppercase">📋 Tugas / Keluhan yang Harus Ditangani:</p>
-        <p id="pfDetailKeluhan" class="leading-relaxed">-</p>
-        <div id="pfComplaintPhotoBox" class="hidden pt-1 border-t border-amber-200">
-          <a id="pfComplaintPhotoLink" href="#" target="_blank" class="inline-flex items-center gap-1 text-xs font-bold text-amber-900 underline">
-            📷 Lihat Foto Komplain dari Pelapor / Tamu
-          </a>
-        </div>
-      </div>
-
-      <div id="pfTimeInfo" class="hidden bg-blue-50 border border-blue-200 p-2.5 rounded-lg text-xs text-blue-800">
-        ⏱️ <b>Waktu Mulai Respon:</b> <span id="pfStartTimeText">-</span>
-      </div>
-
-      <!-- Area Form Aksi Petugas -->
-      <div id="pfActionFormArea" class="space-y-3">
-        <input type="hidden" id="pfTicketId">
-        <input type="hidden" id="pfTicketTujuan">
-
-        <div class="bg-slate-50 border border-slate-200 p-3 rounded-lg">
-          <label id="pfPinLabel" class="block text-xs font-bold text-slate-700 uppercase">🔐 PIN / Password Petugas <span class="text-red-500">*</span></label>
-          <input type="password" id="pfPasswordInput" placeholder="Masukkan PIN departemen..." class="w-full mt-1 p-2 border rounded-md text-sm bg-white focus:ring-2 focus:ring-teal-500">
-        </div>
-
         <div>
-          <label class="block text-sm font-semibold text-gray-700">Nama Petugas / PIC <span class="text-red-500">*</span></label>
-          <input type="text" id="pfPicName" placeholder="Ketik nama Anda (Contoh: Andi / Siti)" class="w-full mt-1 p-2.5 border rounded-lg focus:ring-2 focus:ring-teal-500">
-        </div>
-
-        <div class="border-t pt-3 space-y-3">
-          <div>
-            <label class="block text-sm font-semibold text-gray-700">Catatan Penyelesaian (Wajib saat Selesai)</label>
-            <textarea id="pfCatatan" rows="2" placeholder="Tuliskan tindakan yang sudah dilakukan..." class="w-full mt-1 p-2 border rounded-lg text-sm"></textarea>
-          </div>
-
-          <div>
-            <label class="block text-sm font-semibold text-gray-700">📸 Foto Bukti Selesai (Kamera HP)</label>
-            <input type="file" id="pfFotoInput" accept="image/*" capture="environment" onchange="previewAndCompressFocusImage(event)" class="w-full mt-1 text-xs text-gray-600 file:mr-3 file:py-2 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
-            <img id="pfFotoPreview" class="hidden mt-2 h-36 w-full object-cover rounded-lg border" alt="Preview Foto">
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3 pt-2">
-          <button type="button" id="btnPfStart" onclick="submitFocusAction('Follow Up')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-3 rounded-lg text-sm shadow">
-            👋 Mulai Respon
-          </button>
-          <button type="button" id="btnPfFinish" onclick="submitFocusAction('Resolved')" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-3 rounded-lg text-sm shadow">
-            ✅ Klik Selesai
-          </button>
+          <h1 class="text-lg sm:text-xl font-bold tracking-tight">ASTON TANJUNGPINANG</h1>
+          <p class="text-xs text-amber-400 font-medium tracking-wider uppercase">Hotel & Conference Center • Operations Hub</p>
         </div>
       </div>
-
-      <!-- Area Status Tuntas -->
-      <div id="pfCompletedArea" class="hidden bg-green-50 border border-green-200 p-4 rounded-lg text-center space-y-2">
-        <p class="text-green-700 font-bold text-base">✅ Tugas Ini Sudah Selesai</p>
-        <p class="text-xs text-gray-600" id="pfCompletedSummary">-</p>
+      <div class="flex items-center gap-4 text-xs">
+        <div class="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-slate-300 font-medium">System Online</span>
+        </div>
+        <div id="liveClock" class="font-mono text-amber-300 font-semibold bg-slate-800 px-3 py-1.5 rounded-md border border-slate-700">
+          --:--:-- WIB
+        </div>
       </div>
     </div>
-  </div>
+  </header>
 
-  <!-- ======================================================== -->
-  <!-- MODE DASHBOARD UTAMA (UNTUK ADMIN / FO / HK DI DESKTOP)  -->
-  <!-- ======================================================== -->
-  <div id="mainDashboardContainer" class="max-w-7xl mx-auto space-y-6">
-    <h1 class="text-3xl font-bold text-center text-gray-800">Sistem Operasional Aston Tanjungpinang</h1>
-
-    <!-- Navigasi Menu Utama -->
-    <div class="flex justify-center space-x-2 bg-white p-2 rounded-lg shadow-sm max-w-xl mx-auto">
-      <button onclick="switchMainTab('wo')" id="tabBtnWO" class="flex-1 py-2.5 px-4 rounded-md font-semibold text-sm bg-blue-600 text-white transition">
-        🛠️ Work Order (Maintenance)
-      </button>
-      <button onclick="switchMainTab('room')" id="tabBtnRoom" class="flex-1 py-2.5 px-4 rounded-md font-semibold text-sm text-gray-600 hover:bg-gray-100 transition">
-        🛎️ Room Division (FO & HK)
-      </button>
+  <!-- MAIN PORTAL CONTENT -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+    
+    <!-- Welcome Banner -->
+    <div class="text-center max-w-2xl mx-auto space-y-2">
+      <span class="inline-block px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold uppercase tracking-wider">
+        Integrated Hotel Operations
+      </span>
+      <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Pilih Modul Operasional Departemen</h2>
+      <p class="text-sm text-slate-500">Akses cepat pelaporan kendala kamar, koordinasi Front Office, Housekeeping, serta pemeliharaan fasilitas hotel.</p>
     </div>
 
-    <!-- BAGIAN 1: SISTEM WORK ORDER -->
-    <div id="sectionWO" class="space-y-8">
-      <div class="bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-xl font-semibold mb-4 text-gray-700">Buat Work Order Baru</h2>
-        <form id="woForm" onsubmit="submitWO(event)" class="space-y-4">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Nama Pelapor</label>
-              <input type="text" id="pelapor" required class="w-full mt-1 p-2 border rounded-md">
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Lokasi / Ruangan</label>
-              <input type="text" id="lokasi" required class="w-full mt-1 p-2 border rounded-md">
-            </div>
+    <!-- 2 KARTU UTAMA DEPARTEMEN -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      
+      <!-- KARTU 1: ROOM DIVISION -->
+      <a href="room-division.html" class="group bg-white rounded-2xl p-7 shadow-sm hover:shadow-xl border border-slate-200 hover:border-teal-500 transition-all duration-200 flex flex-col justify-between relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-teal-50 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
+        <div class="relative space-y-4">
+          <div class="w-14 h-14 rounded-xl bg-teal-600 text-white flex items-center justify-center text-2xl shadow-md">
+            🛎️
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700">Deskripsi Masalah / Pekerjaan</label>
-            <textarea id="deskripsi" required class="w-full mt-1 p-2 border rounded-md" rows="3"></textarea>
+            <div class="flex items-center gap-2">
+              <h3 class="text-xl font-bold text-slate-900 group-hover:text-teal-700 transition">Room Division Coordination</h3>
+            </div>
+            <p class="text-xs font-semibold text-teal-600 uppercase tracking-wider mt-0.5">Front Office • Housekeeping • Room Engineering</p>
+          </div>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Input keluhan & permintaan tamu kamar, routing otomatis ke grup WhatsApp HK/Engineering, pelacakan durasi penyelesaian, serta laporan KPI bulanan.
+          </p>
+
+          <!-- Live Mini Stats Room Division -->
+          <div class="grid grid-cols-3 gap-2 pt-2">
+            <div class="bg-slate-50 border border-slate-100 rounded-lg p-2.5 text-center">
+              <div id="statRoomOpen" class="text-lg font-extrabold text-rose-600">-</div>
+              <div class="text-[11px] font-semibold text-slate-500">Open</div>
+            </div>
+            <div class="bg-slate-50 border border-slate-100 rounded-lg p-2.5 text-center">
+              <div id="statRoomProgress" class="text-lg font-extrabold text-amber-600">-</div>
+              <div class="text-[11px] font-semibold text-slate-500">Follow Up</div>
+            </div>
+            <div class="bg-slate-50 border border-slate-100 rounded-lg p-2.5 text-center">
+              <div id="statRoomDone" class="text-lg font-extrabold text-emerald-600">-</div>
+              <div class="text-[11px] font-semibold text-slate-500">Resolved</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-sm font-bold text-teal-700">
+          <span>Buka Live Board Room Division</span>
+          <span class="group-hover:translate-x-1 transition-transform">→</span>
+        </div>
+      </a>
+
+      <!-- KARTU 2: WORK ORDER MAINTENANCE -->
+      <a href="work-order.html" class="group bg-white rounded-2xl p-7 shadow-sm hover:shadow-xl border border-slate-200 hover:border-blue-600 transition-all duration-200 flex flex-col justify-between relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
+        <div class="relative space-y-4">
+          <div class="w-14 h-14 rounded-xl bg-slate-900 text-amber-400 flex items-center justify-center text-2xl shadow-md">
+            🛠️
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700">Tingkat Prioritas</label>
-            <select id="prioritas" class="w-full mt-1 p-2 border rounded-md">
-              <option value="Rendah">Rendah</option>
-              <option value="Sedang">Sedang</option>
-              <option value="Tinggi">Tinggi</option>
-            </select>
+            <h3 class="text-xl font-bold text-slate-900 group-hover:text-blue-700 transition">Work Order & Maintenance</h3>
+            <p class="text-xs font-semibold text-blue-600 uppercase tracking-wider mt-0.5">Engineering • Back of House • Facility Repair</p>
           </div>
-          <button type="submit" id="btnSubmit" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 font-medium">Kirim Work Order</button>
-        </form>
-      </div>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Pengajuan perbaikan aset, mesin, area publik, dan fasilitas back-of-house, pelacakan status tiket oleh pelapor, serta dashboard kendali Admin Engineering.
+          </p>
 
-      <div class="bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-lg font-semibold mb-3 text-gray-700">🔍 Lacak Progres Work Order Anda</h2>
-        <div class="flex flex-col sm:flex-row gap-2">
-          <input type="text" id="searchQuery" placeholder="Masukkan Nama Pelapor atau ID Tiket..." class="flex-1 p-2 border rounded-md text-sm">
-          <button onclick="trackUserWO()" id="btnTrack" class="bg-indigo-600 text-white px-5 py-2 rounded-md hover:bg-indigo-700 text-sm font-medium">Cek Status</button>
-        </div>
-        <div id="trackResultArea" class="hidden mt-4 overflow-x-auto">
-          <table class="w-full text-left border-collapse border">
-            <thead>
-              <tr class="bg-gray-50 border-b text-xs">
-                <th class="p-2.5 font-semibold">ID Tiket</th>
-                <th class="p-2.5 font-semibold">Tanggal</th>
-                <th class="p-2.5 font-semibold">Lokasi</th>
-                <th class="p-2.5 font-semibold">Deskripsi</th>
-                <th class="p-2.5 font-semibold">Status</th>
-                <th class="p-2.5 font-semibold">PIC Teknisi</th>
-                <th class="p-2.5 font-semibold">Keterangan / Remark</th>
-              </tr>
-            </thead>
-            <tbody id="trackTableBody" class="text-sm"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div id="adminLoginArea" class="text-center pt-2">
-        <button onclick="unlockAdminDashboard()" class="bg-slate-800 text-white px-5 py-2.5 rounded-md hover:bg-slate-900 font-medium text-sm shadow">
-          🔐 Buka Dashboard Admin / Daftar Work Order
-        </button>
-      </div>
-
-      <div id="adminDashboard" class="hidden bg-white p-6 rounded-lg shadow-md space-y-4 border-2 border-blue-500">
-        <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-2 border-b pb-3">
-          <div>
-            <h2 class="text-xl font-semibold text-gray-800">Daftar Work Order (Khusus Tim Admin)</h2>
-            <p class="text-xs text-gray-500">Akses Admin Aktif</p>
-          </div>
-          <div class="flex space-x-2">
-            <button onclick="openReportModal()" class="bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700 text-sm font-medium">📄 Cetak Laporan</button>
-            <button onclick="loadData()" class="bg-gray-200 text-gray-700 px-3 py-1.5 rounded hover:bg-gray-300 text-sm font-medium">Refresh Data</button>
-            <button onclick="lockAdminDashboard()" class="bg-red-600 text-white px-3 py-1.5 rounded hover:bg-red-700 text-sm font-medium">🔒 Kunci Dashboard</button>
+          <!-- Live Mini Stats Work Order -->
+          <div class="grid grid-cols-3 gap-2 pt-2">
+            <div class="bg-slate-50 border border-slate-100 rounded-lg p-2.5 text-center">
+              <div id="statWoPending" class="text-lg font-extrabold text-slate-700">-</div>
+              <div class="text-[11px] font-semibold text-slate-500">Pending</div>
+            </div>
+            <div class="bg-slate-50 border border-slate-100 rounded-lg p-2.5 text-center">
+              <div id="statWoProgress" class="text-lg font-extrabold text-amber-600">-</div>
+              <div class="text-[11px] font-semibold text-slate-500">In Progress</div>
+            </div>
+            <div class="bg-slate-50 border border-slate-100 rounded-lg p-2.5 text-center">
+              <div id="statWoDone" class="text-lg font-extrabold text-emerald-600">-</div>
+              <div class="text-[11px] font-semibold text-slate-500">Completed</div>
+            </div>
           </div>
         </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse">
-            <thead>
-              <tr class="bg-gray-50 border-b">
-                <th class="p-3 text-sm font-semibold">ID</th>
-                <th class="p-3 text-sm font-semibold">Tanggal</th>
-                <th class="p-3 text-sm font-semibold">Pelapor</th>
-                <th class="p-3 text-sm font-semibold">Lokasi</th>
-                <th class="p-3 text-sm font-semibold">Deskripsi</th>
-                <th class="p-3 text-sm font-semibold">Prioritas</th>
-                <th class="p-3 text-sm font-semibold">Status</th>
-                <th class="p-3 text-sm font-semibold">PIC Teknisi</th>
-                <th class="p-3 text-sm font-semibold">Time Solving</th>
-                <th class="p-3 text-sm font-semibold">Remark</th>
-                <th class="p-3 text-sm font-semibold">Aksi Admin</th>
-              </tr>
-            </thead>
-            <tbody id="tableBody">
-              <tr><td colspan="11" class="text-center p-4">Klik Refresh Data untuk memuat...</td></tr>
-            </tbody>
-          </table>
+
+        <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-sm font-bold text-blue-700">
+          <span>Buka Sistem Work Order</span>
+          <span class="group-hover:translate-x-1 transition-transform">→</span>
         </div>
-      </div>
+      </a>
+
     </div>
+  </main>
 
-    <!-- BAGIAN 2: ROOM DIVISION COMPLAINT -->
-    <div id="sectionRoom" class="hidden space-y-8">
-      <div class="bg-white p-6 rounded-lg shadow-md border-t-4 border-teal-600">
-        <h2 class="text-xl font-semibold mb-1 text-gray-800">Input Koordinasi & Komplain Kamar (FO / HK / Engineering)</h2>
-        <p class="text-xs text-gray-500 mb-4">Pilih <b>Departemen Tujuan</b> agar notifikasi WA, kategori masalah, dan PIN akses petugas diarahkan ke tim yang tepat.</p>
-        
-        <form id="roomForm" onsubmit="submitRoomComplaint(event)" class="space-y-4">
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Nomor Kamar / Area</label>
-              <input type="text" id="rcKamar" placeholder="Contoh: 205 / Lobby" required class="w-full mt-1 p-2 border rounded-md">
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Dari Departemen (Pelapor)</label>
-              <select id="rcDari" class="w-full mt-1 p-2 border rounded-md">
-                <option value="Front Office (FO)">Front Office (FO)</option>
-                <option value="Housekeeping (HK)">Housekeeping (HK)</option>
-                <option value="Engineering">Engineering</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-teal-800">🎯 Ditujukan Ke (Department)</label>
-              <select id="rcTujuan" onchange="updateKategoriByTujuan()" class="w-full mt-1 p-2 border-2 border-teal-500 rounded-md bg-teal-50 font-medium text-gray-800">
-                <option value="Housekeeping (HK)">Housekeeping (HK)</option>
-                <option value="Engineering">Engineering (Maintenance)</option>
-                <option value="Front Office (FO)">Front Office (FO)</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Kategori Masalah / Request</label>
-              <select id="rcKategori" class="w-full mt-1 p-2 border rounded-md"></select>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-gray-700">Detail Pesan / Keluhan</label>
-              <textarea id="rcDetail" placeholder="Jelaskan detail permintaan tamu atau kendala kamar..." required class="w-full mt-1 p-2 border rounded-md" rows="2"></textarea>
-            </div>
-            <div class="bg-slate-50 p-3 rounded-md border border-slate-200">
-              <label class="block text-xs font-bold text-slate-700">📷 Foto Komplain dari Tamu (Opsional)</label>
-              <input type="file" id="rcFotoKomplainInput" accept="image/*" onchange="previewAndCompressComplaintImage(event)" class="w-full mt-1.5 text-xs text-gray-600 file:mr-2 file:py-1.5 file:px-2.5 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-teal-100 file:text-teal-800 hover:file:bg-teal-200">
-              <div id="rcFotoPreviewBox" class="hidden mt-2 flex items-center gap-2">
-                <img id="rcFotoPreview" class="h-12 w-16 object-cover rounded border" alt="Preview Komplain">
-                <button type="button" onclick="clearComplaintPhoto()" class="text-xs text-red-600 underline font-semibold">Hapus Foto</button>
-              </div>
-            </div>
-          </div>
-
-          <button type="submit" id="btnSubmitRoom" class="w-full bg-teal-600 text-white py-2.5 rounded-md hover:bg-teal-700 font-semibold shadow">
-            📢 Kirim Info & Notifikasi WA
-          </button>
-        </form>
-      </div>
-
-      <!-- Live Board Komunikasi FO, HK & Engineering -->
-      <div class="bg-white p-6 rounded-lg shadow-md">
-        <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-2 border-b pb-3">
-          <div>
-            <h2 class="text-xl font-semibold text-gray-800">📋 Live Board Koordinasi Room Division</h2>
-            <p class="text-xs text-gray-500">Klik tombol <b>⚡ Tindakan</b> untuk mulai respon atau menyelesaikan komplain (menggunakan PIN masing-masing departemen).</p>
-          </div>
-          <div class="flex space-x-2">
-            <button onclick="openRoomReportModal()" class="bg-indigo-600 text-white px-3 py-1.5 rounded hover:bg-indigo-700 text-sm font-medium shadow">
-              📊 Laporan & KPI Room Division
-            </button>
-            <button onclick="loadRoomData()" class="bg-teal-50 text-teal-700 border border-teal-200 px-3 py-1.5 rounded hover:bg-teal-100 text-sm font-medium">
-              🔄 Refresh Board
-            </button>
-          </div>
-        </div>
-
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse">
-            <thead>
-              <tr class="bg-gray-50 border-b text-xs uppercase text-gray-600">
-                <th class="p-3">Kamar</th>
-                <th class="p-3">Dari & Tujuan</th>
-                <th class="p-3">Kategori & Detail</th>
-                <th class="p-3">Status</th>
-                <th class="p-3">Waktu & Durasi</th>
-                <th class="p-3">PIC, Catatan & Bukti</th>
-                <th class="p-3">Tindakan Cepat</th>
-              </tr>
-            </thead>
-            <tbody id="roomTableBody" class="text-sm">
-              <tr><td colspan="7" class="text-center p-4 text-gray-500">Memuat data koordinasi...</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL TINDAKAN CEPAT (DARI LIVE BOARD) -->
-  <div id="quickActionModal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-xl p-6 max-w-md w-full space-y-4 shadow-2xl border-t-4 border-teal-600">
-      <div class="flex justify-between items-start border-b pb-3">
-        <div>
-          <span id="qaBadgeStatus" class="px-2.5 py-0.5 rounded-full text-xs font-semibold text-white bg-red-500">Open</span>
-          <h3 class="text-xl font-bold text-gray-800 mt-1" id="qaTitleKamar">Kamar 205</h3>
-          <p class="text-xs text-gray-500" id="qaSubtitleInfo">Kategori - Pelapor</p>
-        </div>
-        <button onclick="closeQuickActionModal()" class="text-gray-400 hover:text-gray-700 text-xl font-bold">×</button>
-      </div>
-
-      <div class="bg-gray-50 p-3 rounded-lg text-sm text-gray-700 border space-y-2">
-        <p class="font-semibold text-xs text-gray-500 uppercase">Detail Keluhan:</p>
-        <p id="qaDetailKeluhan">-</p>
-        <div id="qaComplaintPhotoBox" class="hidden pt-1 border-t">
-          <a id="qaComplaintPhotoLink" href="#" target="_blank" class="text-xs font-bold text-amber-700 underline">
-            📷 Lihat Foto Komplain dari Pelapor / Tamu
-          </a>
-        </div>
-      </div>
-
-      <input type="hidden" id="qaTicketId">
-      <input type="hidden" id="qaTicketTujuan">
-
-      <div class="bg-slate-50 border border-slate-200 p-3 rounded-lg">
-        <label id="qaPinLabel" class="block text-xs font-bold text-slate-700 uppercase">🔐 PIN / Password Petugas <span class="text-red-500">*</span></label>
-        <input type="password" id="qaPasswordInput" placeholder="Masukkan PIN departemen..." class="w-full mt-1 p-2 border rounded-md text-sm bg-white focus:ring-2 focus:ring-teal-500">
-      </div>
-
-      <div>
-        <label class="block text-sm font-semibold text-gray-700">Nama Petugas / PIC <span class="text-red-500">*</span></label>
-        <input type="text" id="qaPicName" placeholder="Masukkan nama Anda" class="w-full mt-1 p-2.5 border rounded-lg">
-      </div>
-
-      <div class="border-t pt-3 space-y-3">
-        <div>
-          <label class="block text-sm font-semibold text-gray-700">Catatan Penyelesaian (Wajib saat Selesai)</label>
-          <textarea id="qaCatatan" rows="2" placeholder="Tuliskan tindakan penyelesaian..." class="w-full mt-1 p-2 border rounded-lg text-sm"></textarea>
-        </div>
-
-        <div>
-          <label class="block text-sm font-semibold text-gray-700">📸 Foto Bukti Penyelesaian (Kamera HP)</label>
-          <input type="file" id="qaFotoInput" accept="image/*" capture="environment" onchange="previewAndCompressImage(event)" class="w-full mt-1 text-xs text-gray-600 file:mr-3 file:py-2 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-teal-50 file:text-teal-700">
-          <img id="qaFotoPreview" class="hidden mt-2 h-32 w-full object-cover rounded-lg border" alt="Preview Foto">
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-3 pt-2">
-        <button type="button" id="btnQaStart" onclick="submitQuickAction('Follow Up')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2.5 px-3 rounded-lg text-sm shadow">
-          👋 Mulai Respon
-        </button>
-        <button type="button" id="btnQaFinish" onclick="submitQuickAction('Resolved')" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-3 rounded-lg text-sm shadow">
-          ✅ Klik Selesai
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL FILTER LAPORAN WORK ORDER -->
-  <div id="reportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-lg p-6 max-w-md w-full space-y-4 shadow-xl">
-      <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Cetak Laporan Work Order</h3>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Pilih Bulan & Tahun</label>
-        <input type="month" id="reportMonth" onchange="syncDaysInMonth('reportMonth', 'reportDayStart', 'reportDayEnd')" class="w-full mt-1 p-2 border rounded-md">
-      </div>
-      <div class="grid grid-cols-2 gap-3 bg-blue-50 p-3 rounded-md border border-blue-100">
-        <div>
-          <label class="block text-xs font-semibold text-blue-900">Dari Tanggal</label>
-          <select id="reportDayStart" class="w-full mt-1 p-2 border rounded-md text-sm bg-white"></select>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-blue-900">Sampai Tanggal</label>
-          <select id="reportDayEnd" class="w-full mt-1 p-2 border rounded-md text-sm bg-white"></select>
-        </div>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Nama Admin / Pembuat Laporan</label>
-        <input type="text" id="adminName" placeholder="Contoh: Budi Maintenance" class="w-full mt-1 p-2 border rounded-md">
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Nama Atasan / Manager</label>
-        <input type="text" id="managerName" placeholder="Contoh: Manager Operasional" class="w-full mt-1 p-2 border rounded-md">
-      </div>
-      <div class="flex justify-end space-x-2 pt-3 border-t">
-        <button onclick="closeReportModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm font-medium">Batal</button>
-        <button onclick="generateReport()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium">Buka & Cetak Laporan</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL FILTER LAPORAN ROOM DIVISION -->
-  <div id="roomReportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-lg p-6 max-w-md w-full space-y-4 shadow-xl">
-      <h3 class="text-lg font-bold text-gray-800 border-b pb-2">Laporan & KPI Room Division (FO, HK & Eng)</h3>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Pilih Bulan & Tahun</label>
-        <input type="month" id="roomReportMonth" onchange="syncDaysInMonth('roomReportMonth', 'roomDayStart', 'roomDayEnd')" class="w-full mt-1 p-2 border rounded-md">
-      </div>
-      <div class="grid grid-cols-2 gap-3 bg-teal-50 p-3 rounded-md border border-teal-100">
-        <div>
-          <label class="block text-xs font-semibold text-teal-900">Dari Tanggal</label>
-          <select id="roomDayStart" class="w-full mt-1 p-2 border rounded-md text-sm bg-white"></select>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-teal-900">Sampai Tanggal</label>
-          <select id="roomDayEnd" class="w-full mt-1 p-2 border rounded-md text-sm bg-white"></select>
-        </div>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Dibuat Oleh (FO / HK Supervisor)</label>
-        <input type="text" id="roomCreatorName" placeholder="Contoh: Duty Manager / HK Supv" class="w-full mt-1 p-2 border rounded-md">
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Disetujui Oleh (Room Division Manager)</label>
-        <input type="text" id="roomManagerName" placeholder="Contoh: Room Division Manager" class="w-full mt-1 p-2 border rounded-md">
-      </div>
-      <div class="flex justify-end space-x-2 pt-3 border-t">
-        <button onclick="closeRoomReportModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm font-medium">Batal</button>
-        <button onclick="generateRoomReport()" class="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700 text-sm font-medium">Buka Summary & KPI</button>
-      </div>
-    </div>
-  </div>
+  <!-- FOOTER -->
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+    © 2026 ASTON Tanjungpinang Hotel & Conference Center • Internal Operational System
+  </footer>
 
   <script>
-    let globalWOData = [];
-    let globalRoomData = [];
-    let isAdminUnlocked = false;
-    let compressedBase64Photo = "";
-    let compressedComplaintPhoto = "";
-
-    function validateDepartmentPin(tujuan, inputPwd) {
-      const dept = String(tujuan || "Housekeeping (HK)");
-      if (dept.includes("Engineering")) {
-        if (inputPwd !== ENG_PASSWORD) {
-          alert("❌ PIN Engineering salah! Tiket ini ditujukan khusus untuk tim Engineering.");
-          return false;
-        }
-      } else {
-        if (inputPwd !== HK_PASSWORD) {
-          alert("❌ PIN Housekeeping (HK) salah! Tiket ini ditujukan khusus untuk tim Housekeeping.");
-          return false;
-        }
-      }
-      return true;
-    }
-
-    const KATEGORI_BY_TUJUAN = {
-      "Housekeeping (HK)": [
-        "HK - Kebersihan Kamar / Bau",
-        "HK - Request Amenities / Extra Bed / Linen",
-        "HK - Room Status / Make Up Room",
-        "HK - Discrepancy / Lost & Found",
-        "HK - Lainnya"
-      ],
-      "Engineering": [
-        "ENG - AC / Suhu Ruangan",
-        "ENG - TV / WiFi / Elektronik",
-        "ENG - Plumbing / Air / Toilet",
-        "ENG - Listrik / Lampu / Stop Kontak",
-        "ENG - Kunci Pintu / Safe Deposit Box / Sipil",
-        "ENG - Lainnya"
-      ]
-    };
-
-    function updateKategoriByTujuan() {
-      const tujuan = document.getElementById("rcTujuan").value;
-      const katSelect = document.getElementById("rcKategori");
-      const list = KATEGORI_BY_TUJUAN[tujuan] || KATEGORI_BY_TUJUAN["Housekeeping (HK)"];
-      katSelect.innerHTML = "";
-      list.forEach(item => {
-        const opt = document.createElement("option");
-        opt.value = item;
-        opt.text = item;
-        katSelect.appendChild(opt);
-      });
-    }
-
-    // Kompresi foto komplain opsional dari pelapor
-    function previewAndCompressComplaintImage(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const img = new Image();
-        img.onload = function() {
-          const canvas = document.createElement("canvas");
-          const maxWidth = 800;
-          const scale = maxWidth / img.width;
-          canvas.width = maxWidth;
-          canvas.height = img.height * scale;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          compressedComplaintPhoto = canvas.toDataURL("image/jpeg", 0.7);
-          document.getElementById("rcFotoPreview").src = compressedComplaintPhoto;
-          document.getElementById("rcFotoPreviewBox").classList.remove("hidden");
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function clearComplaintPhoto() {
-      compressedComplaintPhoto = "";
-      document.getElementById("rcFotoKomplainInput").value = "";
-      document.getElementById("rcFotoPreviewBox").classList.add("hidden");
-    }
-
-    window.addEventListener("DOMContentLoaded", () => {
-      updateKategoriByTujuan();
-      populateDayOptions("reportDayStart", 1);
-      populateDayOptions("reportDayEnd", 30);
-      populateDayOptions("roomDayStart", 1);
-      populateDayOptions("roomDayEnd", 30);
-
-      const params = new URLSearchParams(window.location.search);
-      const targetTab = params.get("tab");
-      const targetTiket = params.get("tiket") || params.get("id");
-
-      if (targetTiket) {
-        activatePetugasFocusMode(targetTiket);
-        return;
-      }
-
-      if (targetTab === "room") {
-        switchMainTab("room");
-      }
-    });
-
-    function populateDayOptions(selectId, defaultVal) {
-      const sel = document.getElementById(selectId);
-      if (!sel) return;
-      sel.innerHTML = "";
-      for (let d = 1; d <= 31; d++) {
-        const opt = document.createElement("option");
-        opt.value = d;
-        opt.text = "Tanggal " + d;
-        if (d === defaultVal) opt.selected = true;
-        sel.appendChild(opt);
-      }
-    }
-
-    function syncDaysInMonth(monthInputId, startSelectId, endSelectId) {
-      const val = document.getElementById(monthInputId).value;
-      if (!val) return;
-      const [year, month] = val.split("-").map(Number);
-      const lastDay = new Date(year, month, 0).getDate();
-      document.getElementById(startSelectId).value = 1;
-      document.getElementById(endSelectId).value = lastDay;
-    }
-
-    function parseSheetDateParts(dateStr) {
-      if (!dateStr) return null;
-      const str = String(dateStr).trim();
-      const firstPart = str.split(",")[0].trim();
-      if (firstPart.includes("/")) {
-        const parts = firstPart.split("/");
-        if (parts.length === 3) {
-          return {
-            day: parseInt(parts[0], 10),
-            month: parseInt(parts[1], 10),
-            year: parseInt(parts[2], 10)
-          };
-        }
-      }
-      const d = new Date(str);
-      if (!isNaN(d.getTime())) {
-        return {
-          day: d.getDate(),
-          month: d.getMonth() + 1,
-          year: d.getFullYear()
-        };
-      }
-      return null;
-    }
-
-    // ==========================================
-    // MODE FOKUS PETUGAS (LAYAR TUNGGAL KHUSUS)
-    // ==========================================
-    async function activatePetugasFocusMode(ticketId) {
-      document.getElementById("mainDashboardContainer").classList.add("hidden");
-      document.getElementById("petugasFocusContainer").classList.remove("hidden");
-
-      try {
-        const res = await fetch(API_URL + "?sheet=RoomComplaint&t=" + new Date().getTime());
-        const data = await res.json();
-        const tiket = Array.isArray(data) ? data.find(item => String(item.id).trim() === String(ticketId).trim()) : null;
-
-        document.getElementById("petugasLoadingCard").classList.add("hidden");
-        document.getElementById("petugasTaskCard").classList.remove("hidden");
-
-        if (!tiket) {
-          document.getElementById("pfTitleKamar").innerText = "Tiket Tidak Ditemukan";
-          document.getElementById("pfDetailKeluhan").innerText = "ID Tiket (" + ticketId + ") tidak ditemukan di database.";
-          document.getElementById("pfActionFormArea").classList.add("hidden");
-          return;
-        }
-
-        const tujuanText = tiket.tujuan || "Housekeeping (HK)";
-        const isEng = tujuanText.includes("Engineering");
-        const tujuanBadge = document.getElementById("pfTujuanBadge");
-        tujuanBadge.innerText = "TIM: " + tujuanText.toUpperCase();
-        tujuanBadge.className = isEng
-          ? "text-xs font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-orange-100 text-orange-800"
-          : "text-xs font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-teal-100 text-teal-800";
-
-        document.getElementById("pfTicketId").value = tiket.id;
-        document.getElementById("pfTicketTujuan").value = tujuanText;
-        document.getElementById("pfPinLabel").innerHTML = isEng
-          ? '🔐 PIN / Password Petugas Engineering <span class="text-red-500">*</span>'
-          : '🔐 PIN / Password Petugas Housekeeping (HK) <span class="text-red-500">*</span>';
-
-        document.getElementById("pfTitleKamar").innerText = "Kamar / Area: " + (tiket.kamar || "-");
-        document.getElementById("pfSubtitleInfo").innerText = (tiket.kategori || "-") + " • Laporan dari: " + (tiket.dari || "-");
-        document.getElementById("pfDetailKeluhan").innerText = tiket.detail || "-";
-
-        // Tampilkan tautan foto komplain jika dilampirkan pelapor
-        if (tiket.fotoKomplain && tiket.fotoKomplain.startsWith("http")) {
-          document.getElementById("pfComplaintPhotoBox").classList.remove("hidden");
-          document.getElementById("pfComplaintPhotoLink").href = tiket.fotoKomplain;
-        } else {
-          document.getElementById("pfComplaintPhotoBox").classList.add("hidden");
-        }
-
-        const st = (tiket.status || "Open").trim();
-        const badge = document.getElementById("pfBadgeStatus");
-        badge.innerText = st;
-        badge.className = "px-2.5 py-0.5 rounded-full text-xs font-semibold text-white " +
-          (st === "Resolved" ? "bg-green-600" : (st === "Follow Up" ? "bg-yellow-500" : "bg-red-500"));
-
-        if (tiket.waktuMulai && tiket.waktuMulai !== "-") {
-          document.getElementById("pfTimeInfo").classList.remove("hidden");
-          document.getElementById("pfStartTimeText").innerText = tiket.waktuMulai;
-        }
-
-        if (st === "Resolved") {
-          document.getElementById("pfActionFormArea").classList.add("hidden");
-          document.getElementById("pfCompletedArea").classList.remove("hidden");
-          document.getElementById("pfCompletedSummary").innerText =
-            `Diselesaikan oleh ${tiket.pic || '-'} pada ${tiket.waktuSelesai || '-'} (Durasi: ${tiket.durasi || '-'}). Catatan: ${tiket.catatan || '-'}`;
-        } else {
-          document.getElementById("pfPicName").value = (tiket.pic && tiket.pic !== "-") ? tiket.pic : "";
-          document.getElementById("pfCatatan").value = (tiket.catatan && tiket.catatan !== "-") ? tiket.catatan : "";
-        }
-      } catch (err) {
-        document.getElementById("petugasLoadingCard").innerHTML = '<p class="text-red-600 font-semibold">Gagal memuat tugas. Periksa koneksi internet Anda.</p>';
-      }
-    }
-
-    function previewAndCompressFocusImage(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const img = new Image();
-        img.onload = function() {
-          const canvas = document.createElement("canvas");
-          const maxWidth = 800;
-          const scale = maxWidth / img.width;
-          canvas.width = maxWidth;
-          canvas.height = img.height * scale;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          compressedBase64Photo = canvas.toDataURL("image/jpeg", 0.7);
-          const previewEl = document.getElementById("pfFotoPreview");
-          previewEl.src = compressedBase64Photo;
-          previewEl.classList.remove("hidden");
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
-
-    async function submitFocusAction(newStatus) {
-      const inputPwd = document.getElementById("pfPasswordInput").value;
-      const ticketTujuan = document.getElementById("pfTicketTujuan").value;
-
-      if (!validateDepartmentPin(ticketTujuan, inputPwd)) {
-        document.getElementById("pfPasswordInput").focus();
-        return;
-      }
-
-      const id = document.getElementById("pfTicketId").value;
-      const picName = document.getElementById("pfPicName").value.trim();
-      const catatanInput = document.getElementById("pfCatatan").value.trim();
-
-      if (!picName) {
-        alert("Mohon ketik Nama Anda terlebih dahulu!");
-        return;
-      }
-      if (newStatus === "Resolved" && !catatanInput) {
-        alert("Mohon tulis Catatan Penyelesaian sebelum klik Selesai!");
-        return;
-      }
-
-      const btnStart = document.getElementById("btnPfStart");
-      const btnFinish = document.getElementById("btnPfFinish");
-      btnStart.disabled = true;
-      btnFinish.disabled = true;
-      btnFinish.innerText = "Menyimpan...";
-
-      const catatanFinal = newStatus === "Follow Up"
-        ? (catatanInput || "Sedang ditangani oleh " + picName)
-        : catatanInput;
-
-      try {
-        await fetch(API_URL, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({
-            action: "updateRoomStatus",
-            id: id,
-            status: newStatus,
-            pic: picName,
-            catatan: catatanFinal,
-            fotoBase64: newStatus === "Resolved" ? compressedBase64Photo : ""
-          })
-        });
-
-        alert(newStatus === "Follow Up"
-          ? "👋 Respon tercatat! Waktu mulai pengerjaan sudah berjalan."
-          : "✅ Komplain selesai! Durasi pengerjaan & foto bukti sudah tersimpan.");
-
-        setTimeout(() => activatePetugasFocusMode(id), 1500);
-      } catch (err) {
-        alert("Gagal menyimpan update: " + err);
-      } finally {
-        btnStart.disabled = false;
-        btnFinish.disabled = false;
-        btnFinish.innerText = "✅ Klik Selesai";
-      }
-    }
-
-    // ==========================================
-    // NAVIGASI & LIVE BOARD UTAMA
-    // ==========================================
-    function switchMainTab(tab) {
-      const secWO = document.getElementById("sectionWO");
-      const secRoom = document.getElementById("sectionRoom");
-      const btnWO = document.getElementById("tabBtnWO");
-      const btnRoom = document.getElementById("tabBtnRoom");
-
-      if (tab === 'wo') {
-        secWO.classList.remove("hidden");
-        secRoom.classList.add("hidden");
-        btnWO.className = "flex-1 py-2.5 px-4 rounded-md font-semibold text-sm bg-blue-600 text-white transition";
-        btnRoom.className = "flex-1 py-2.5 px-4 rounded-md font-semibold text-sm text-gray-600 hover:bg-gray-100 transition";
-      } else {
-        secWO.classList.add("hidden");
-        secRoom.classList.remove("hidden");
-        btnRoom.className = "flex-1 py-2.5 px-4 rounded-md font-semibold text-sm bg-teal-600 text-white transition";
-        btnWO.className = "flex-1 py-2.5 px-4 rounded-md font-semibold text-sm text-gray-600 hover:bg-gray-100 transition";
-        loadRoomData();
-      }
-    }
-
-    async function loadRoomData() {
-      const tbody = document.getElementById("roomTableBody");
-      tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4">Memuat data Room Division...</td></tr>';
-      try {
-        const res = await fetch(API_URL + "?sheet=RoomComplaint&t=" + new Date().getTime());
-        const data = await res.json();
-        if (!Array.isArray(data) || data.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-gray-500">Belum ada catatan koordinasi kamar.</td></tr>';
-          globalRoomData = [];
-          return;
-        }
-        globalRoomData = data;
-        tbody.innerHTML = "";
-        [...data].reverse().forEach(row => {
-          const st = (row.status || "Open").trim();
-          let badge = "bg-red-500";
-          if (st === "Follow Up") badge = "bg-yellow-500";
-          if (st === "Resolved") badge = "bg-green-600";
-
-          const tujuanVal = row.tujuan || "Housekeeping (HK)";
-          const tujuanBadge = tujuanVal.includes("Engineering")
-            ? `<span class="inline-block mt-1 px-2 py-0.5 rounded bg-orange-100 text-orange-800 font-bold text-[11px]">➡️ ${tujuanVal}</span>`
-            : `<span class="inline-block mt-1 px-2 py-0.5 rounded bg-teal-100 text-teal-800 font-bold text-[11px]">➡️ ${tujuanVal}</span>`;
-
-          const fotoKomplainHTML = (row.fotoKomplain && row.fotoKomplain.startsWith("http"))
-            ? `<div class="mt-1"><a href="${row.fotoKomplain}" target="_blank" class="text-xs text-amber-700 underline font-semibold">📷 Foto Komplain Tamu</a></div>` : '';
-
-          const fotoBuktiHTML = (row.fotoBukti && row.fotoBukti.startsWith("http"))
-            ? `<div class="mt-1"><a href="${row.fotoBukti}" target="_blank" class="text-teal-600 underline font-semibold">🖼️ Foto Bukti Selesai</a></div>` : '';
-
-          const tr = document.createElement("tr");
-          tr.className = "border-b hover:bg-gray-50";
-          tr.innerHTML = `
-            <td class="p-3"><div class="font-bold text-base text-gray-800">${row.kamar || '-'}</div><div class="text-[10px] text-gray-400 font-mono">${row.tanggal || '-'}</div></td>
-            <td class="p-3 text-xs"><div class="font-semibold text-gray-700">Dari: ${row.dari || '-'}</div>${tujuanBadge}</td>
-            <td class="p-3"><span class="text-xs font-semibold px-2 py-0.5 bg-gray-100 rounded text-gray-700">${row.kategori || '-'}</span><p class="mt-1 text-gray-800">${row.detail || '-'}</p>${fotoKomplainHTML}</td>
-            <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-medium text-white ${badge}">${st}</span></td>
-            <td class="p-3 text-xs space-y-1"><div><span class="text-gray-500">Mulai:</span> <span class="font-medium">${row.waktuMulai || '-'}</span></div><div><span class="text-gray-500">Selesai:</span> <span class="font-medium">${row.waktuSelesai || '-'}</span></div>${row.durasi && row.durasi !== '-' ? `<div class="inline-block bg-purple-100 text-purple-800 px-2 py-0.5 rounded font-semibold">⏱️ ${row.durasi}</div>` : ''}</td>
-            <td class="p-3 text-xs"><div class="font-medium text-blue-700">PIC: ${row.pic || '-'}</div><div class="text-gray-600 italic mt-0.5">${row.catatan || '-'}</div>${fotoBuktiHTML}</td>
-            <td class="p-3 text-xs">${st !== 'Resolved' ? `<button onclick="openQuickActionModal('${row.id}')" class="bg-teal-600 text-white px-3 py-1.5 rounded hover:bg-teal-700 font-semibold shadow-sm">⚡ Tindakan</button>` : '<span class="text-green-600 font-semibold">✔ Tuntas</span>'}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-      } catch (err) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-red-500">Gagal memuat data Room Division.</td></tr>';
-      }
-    }
-
-    function openQuickActionModal(ticketId) {
-      const tiket = globalRoomData.find(r => r.id === ticketId);
-      if (!tiket) return;
-      compressedBase64Photo = "";
-      const tujuanText = tiket.tujuan || "Housekeeping (HK)";
-      const isEng = tujuanText.includes("Engineering");
-
-      document.getElementById("qaPasswordInput").value = "";
-      document.getElementById("qaFotoInput").value = "";
-      document.getElementById("qaFotoPreview").classList.add("hidden");
-      document.getElementById("qaTicketId").value = tiket.id;
-      document.getElementById("qaTicketTujuan").value = tujuanText;
-      document.getElementById("qaPinLabel").innerHTML = isEng
-        ? '🔐 PIN / Password Petugas Engineering <span class="text-red-500">*</span>'
-        : '🔐 PIN / Password Petugas Housekeeping (HK) <span class="text-red-500">*</span>';
-
-      document.getElementById("qaTitleKamar").innerText = "Kamar / Area: " + (tiket.kamar || "-");
-      document.getElementById("qaSubtitleInfo").innerText = `[Tujuan: ${tujuanText}] • ${tiket.kategori || '-'} • Dari: ${tiket.dari || '-'}`;
-      document.getElementById("qaDetailKeluhan").innerText = tiket.detail || "-";
-
-      if (tiket.fotoKomplain && tiket.fotoKomplain.startsWith("http")) {
-        document.getElementById("qaComplaintPhotoBox").classList.remove("hidden");
-        document.getElementById("qaComplaintPhotoLink").href = tiket.fotoKomplain;
-      } else {
-        document.getElementById("qaComplaintPhotoBox").classList.add("hidden");
-      }
-
-      document.getElementById("qaPicName").value = (tiket.pic && tiket.pic !== "-") ? tiket.pic : "";
-      document.getElementById("qaCatatan").value = (tiket.catatan && tiket.catatan !== "-") ? tiket.catatan : "";
-      const st = (tiket.status || "Open").trim();
-      const badge = document.getElementById("qaBadgeStatus");
-      badge.innerText = st;
-      badge.className = "px-2.5 py-0.5 rounded-full text-xs font-semibold text-white " + (st === "Follow Up" ? "bg-yellow-500" : "bg-red-500");
-      document.getElementById("quickActionModal").classList.remove("hidden");
-    }
-
-    function closeQuickActionModal() { document.getElementById("quickActionModal").classList.add("hidden"); }
-
-    function previewAndCompressImage(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const img = new Image();
-        img.onload = function() {
-          const canvas = document.createElement("canvas");
-          const maxWidth = 800;
-          const scale = maxWidth / img.width;
-          canvas.width = maxWidth;
-          canvas.height = img.height * scale;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          compressedBase64Photo = canvas.toDataURL("image/jpeg", 0.7);
-          const previewEl = document.getElementById("qaFotoPreview");
-          previewEl.src = compressedBase64Photo;
-          previewEl.classList.remove("hidden");
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
-
-    async function submitQuickAction(newStatus) {
-      const inputPwd = document.getElementById("qaPasswordInput").value;
-      const ticketTujuan = document.getElementById("qaTicketTujuan").value;
-
-      if (!validateDepartmentPin(ticketTujuan, inputPwd)) {
-        document.getElementById("qaPasswordInput").focus();
-        return;
-      }
-
-      const id = document.getElementById("qaTicketId").value;
-      const picName = document.getElementById("qaPicName").value.trim();
-      const catatanInput = document.getElementById("qaCatatan").value.trim();
-      if (!picName) return alert("Mohon masukkan Nama Petugas / PIC Anda terlebih dahulu!");
-      if (newStatus === "Resolved" && !catatanInput) return alert("Mohon isi Catatan Penyelesaian sebelum menekan tombol Selesai!");
-
-      const btnStart = document.getElementById("btnQaStart");
-      const btnFinish = document.getElementById("btnQaFinish");
-      btnStart.disabled = true; btnFinish.disabled = true; btnFinish.innerText = "Menyimpan...";
-      const catatanFinal = newStatus === "Follow Up" ? (catatanInput || "Sedang ditangani oleh " + picName) : catatanInput;
-
-      try {
-        await fetch(API_URL, {
-          method: "POST", mode: "no-cors", headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({ action: "updateRoomStatus", id: id, status: newStatus, pic: picName, catatan: catatanFinal, fotoBase64: newStatus === "Resolved" ? compressedBase64Photo : "" })
-        });
-        closeQuickActionModal();
-        alert(newStatus === "Follow Up" ? "👋 Respon tercatat! Waktu mulai pengerjaan sudah berjalan." : "✅ Komplain selesai! Durasi pengerjaan & bukti telah tersimpan.");
-        setTimeout(loadRoomData, 2000);
-      } catch (err) { alert("Gagal memperbarui status: " + err); } finally { btnStart.disabled = false; btnFinish.disabled = false; btnFinish.innerText = "✅ Klik Selesai"; }
-    }
-
-    async function submitRoomComplaint(e) {
-      e.preventDefault();
-      const btn = document.getElementById("btnSubmitRoom");
-      const tujuanVal = document.getElementById("rcTujuan").value;
-      btn.innerText = compressedComplaintPhoto
-        ? "Mengunggah Foto & Mengirim ke Grup " + tujuanVal + "..."
-        : "Mengirim ke Grup " + tujuanVal + "...";
-      btn.disabled = true;
-      try {
-        await fetch(API_URL, {
-          method: "POST", mode: "no-cors", headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({
-            action: "createRoom",
-            kamar: document.getElementById("rcKamar").value,
-            dari: document.getElementById("rcDari").value,
-            tujuan: tujuanVal,
-            kategori: document.getElementById("rcKategori").value,
-            detail: document.getElementById("rcDetail").value,
-            fotoKomplainBase64: compressedComplaintPhoto
-          })
-        });
-        document.getElementById("roomForm").reset();
-        clearComplaintPhoto();
-        updateKategoriByTujuan();
-        alert("Informasi berhasil dikirim ke tim " + tujuanVal + "!");
-        setTimeout(loadRoomData, 2000);
-      } catch (err) { alert("Gagal mengirim data: " + err); } finally { btn.innerText = "📢 Kirim Info & Notifikasi WA"; btn.disabled = false; }
-    }
-
-    // ==========================================
-    // LAPORAN & ANALISIS KPI ROOM DIVISION
-    // ==========================================
-    function openRoomReportModal() {
+    function updateClock() {
       const now = new Date();
-      const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-      document.getElementById("roomReportMonth").value = monthStr;
-      syncDaysInMonth("roomReportMonth", "roomDayStart", "roomDayEnd");
-      document.getElementById("roomReportModal").classList.remove("hidden");
+      document.getElementById("liveClock").innerText = now.toLocaleTimeString("id-ID", { timeZone: "Asia/Jakarta" }) + " WIB";
     }
-    function closeRoomReportModal() { document.getElementById("roomReportModal").classList.add("hidden"); }
+    setInterval(updateClock, 1000);
+    updateClock();
 
-    function parseDurationToMinutes(durStr) {
-      if (!durStr || durStr === "-") return null;
-      if (durStr.includes("< 1")) return 1;
-      let total = 0;
-      const jamMatch = durStr.match(/(\d+)\s*Jam/i);
-      const menitMatch = durStr.match(/(\d+)\s*Menit/i);
-      if (jamMatch) total += parseInt(jamMatch[1]) * 60;
-      if (menitMatch) total += parseInt(menitMatch[1]);
-      return total > 0 ? total : null;
-    }
+    async function loadPortalStats() {
+      try {
+        const [resRoom, resWO] = await Promise.all([
+          fetch(API_URL + "?sheet=RoomComplaint&t=" + Date.now()),
+          fetch(API_URL + "?t=" + Date.now())
+        ]);
+        const roomData = await resRoom.json();
+        const woData = await resWO.json();
 
-    function formatMinutesToText(mins) {
-      if (!mins || isNaN(mins)) return "-";
-      const rounded = Math.round(mins);
-      const h = Math.floor(rounded / 60);
-      const m = rounded % 60;
-      return h > 0 ? `${h} Jam ${m} Menit` : `${m} Menit`;
-    }
-
-    function generateRoomReport() {
-      const monthVal = document.getElementById("roomReportMonth").value;
-      const dayStart = parseInt(document.getElementById("roomDayStart").value, 10);
-      const dayEnd = parseInt(document.getElementById("roomDayEnd").value, 10);
-      const creatorName = document.getElementById("roomCreatorName").value || "Room Division Supervisor";
-      const managerName = document.getElementById("roomManagerName").value || "Room Division Manager";
-
-      if (!monthVal) return alert("Pilih bulan dan tahun terlebih dahulu.");
-      if (dayStart > dayEnd) return alert("Tanggal awal tidak boleh lebih besar dari tanggal akhir.");
-
-      const [year, month] = monthVal.split('-').map(Number);
-
-      const filtered = globalRoomData.filter(row => {
-        const parsed = parseSheetDateParts(row.tanggal);
-        if (!parsed) return false;
-        return parsed.year === year &&
-               parsed.month === month &&
-               parsed.day >= dayStart &&
-               parsed.day <= dayEnd;
-      });
-
-      const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-      const periodTitle = `Tanggal ${dayStart} s/d ${dayEnd} ${monthNames[month - 1]} ${year}`;
-      const totalCase = filtered.length;
-      const resolvedCase = filtered.filter(r => (r.status || '').trim() === 'Resolved').length;
-      const progressCase = filtered.filter(r => (r.status || '').trim() === 'Follow Up').length;
-      const openCase = filtered.filter(r => (r.status || '').trim() === 'Open').length;
-
-      let totalMinutesAll = 0, validDurationCount = 0;
-      const categoryStats = {}, picStats = {};
-      filtered.forEach(item => {
-        const kat = item.kategori || "Lainnya";
-        categoryStats[kat] = (categoryStats[kat] || 0) + 1;
-        const mins = parseDurationToMinutes(item.durasi);
-        if (mins !== null) { totalMinutesAll += mins; validDurationCount++; }
-        const pic = (item.pic && item.pic !== "-") ? item.pic.trim() : null;
-        if (pic) {
-          if (!picStats[pic]) picStats[pic] = { totalHandled: 0, resolvedCount: 0, totalMins: 0, validDurCount: 0 };
-          picStats[pic].totalHandled++;
-          if ((item.status || "").trim() === "Resolved") picStats[pic].resolvedCount++;
-          if (mins !== null) { picStats[pic].totalMins += mins; picStats[pic].validDurCount++; }
+        if (Array.isArray(roomData)) {
+          document.getElementById("statRoomOpen").innerText = roomData.filter(r => (r.status || "Open").trim() === "Open").length;
+          document.getElementById("statRoomProgress").innerText = roomData.filter(r => (r.status || "").trim() === "Follow Up").length;
+          document.getElementById("statRoomDone").innerText = roomData.filter(r => (r.status || "").trim() === "Resolved").length;
         }
-      });
-
-      const avgResolutionTime = validDurationCount > 0 ? formatMinutesToText(totalMinutesAll / validDurationCount) : "-";
-      let categoryRowsHTML = "";
-      Object.entries(categoryStats).sort((a, b) => b[1] - a[1]).forEach(([kat, count], idx) => {
-        const pct = totalCase > 0 ? ((count / totalCase) * 100).toFixed(1) : 0;
-        categoryRowsHTML += `<tr style="border-bottom: 1px solid #ddd;"><td style="padding: 6px; text-align: center;">${idx + 1}</td><td style="padding: 6px; font-weight: bold;">${kat}</td><td style="padding: 6px; text-align: center;">${count} Kasus</td><td style="padding: 6px; text-align: center;">${pct}%</td></tr>`;
-      });
-
-      let picRowsHTML = "";
-      Object.entries(picStats).sort((a, b) => b[1].totalHandled - a[1].totalHandled).forEach(([picName, stat], idx) => {
-        const avgPicTime = stat.validDurCount > 0 ? formatMinutesToText(stat.totalMins / stat.validDurCount) : "Dalam Proses";
-        picRowsHTML += `<tr style="border-bottom: 1px solid #ddd;"><td style="padding: 6px; text-align: center;">${idx + 1}</td><td style="padding: 6px; font-weight: bold; color: #0f766e;">${picName}</td><td style="padding: 6px; text-align: center;">${stat.totalHandled} Tiket</td><td style="padding: 6px; text-align: center;">${stat.resolvedCount} Selesai</td><td style="padding: 6px; text-align: center; font-weight: bold; color: #6d28d9;">${avgPicTime}</td></tr>`;
-      });
-
-      let detailRowsHTML = "";
-      filtered.forEach((item, idx) => {
-        detailRowsHTML += `<tr style="border-bottom: 1px solid #ddd;"><td style="padding: 5px;">${idx + 1}</td><td style="padding: 5px; font-weight: bold;">${item.kamar || '-'}</td><td style="padding: 5px;">Dari: ${item.dari || '-'}<br><b>Ke: ${item.tujuan || 'HK'}</b></td><td style="padding: 5px;"><b>${item.kategori || '-'}</b><br>${item.detail || '-'}</td><td style="padding: 5px;">${item.status || '-'}</td><td style="padding: 5px;">${item.pic || '-'}</td><td style="padding: 5px;">Mulai: ${item.waktuMulai || '-'}<br>Selesai: ${item.waktuSelesai || '-'}</td><td style="padding: 5px; font-weight: bold; color: #6d28d9;">${item.durasi || '-'}</td><td style="padding: 5px; font-style: italic;">${item.catatan || '-'}</td></tr>`;
-      });
-
-      const reportHTML = `<!DOCTYPE html><html><head><title>KPI Room Division - ${periodTitle}</title><style>body { font-family: Arial, sans-serif; padding: 20px; color: #333; } h1, h2, h3 { margin: 2px 0; } .header-flex { border-bottom: 2px solid #0f766e; padding-bottom: 10px; margin-bottom: 15px; } .kpi-container { display: flex; gap: 10px; margin: 15px 0; } .kpi-card { flex: 1; border: 1px solid #ccc; padding: 10px; border-radius: 6px; text-align: center; background: #f8fafc; } table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 10px; } th { background-color: #f1f5f9; padding: 6px; border-bottom: 2px solid #cbd5e1; text-align: left; } .signature-area { margin-top: 35px; display: flex; justify-content: space-between; } .sig-box { width: 40%; text-align: center; font-size: 12px; } .btn-print { background: #0f766e; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-bottom: 15px; } @media print { .btn-print { display: none; } }</style></head><body><button class="btn-print" onclick="window.print()">🖨️ Cetak Summary & KPI (PDF)</button><div class="header-flex"><h1 style="color: #0f766e;">SUMMARY & KPI KOORDINASI ROOM DIVISION (FO, HK & ENG)</h1><h3 style="color: #555;">ASTON Tanjung Pinang Hotel & Conference Center</h3><p style="margin: 4px 0 0 0; font-size: 13px;"><b>Periode Laporan:</b> ${periodTitle}</p></div><div class="kpi-container"><div class="kpi-card"><h4>TOTAL KELUHAN</h4><p>${totalCase}</p></div><div class="kpi-card"><h4>SELESAI</h4><p style="color: green;">${resolvedCase}</p></div><div class="kpi-card"><h4>PROSES</h4><p style="color: #d97706;">${progressCase}</p></div><div class="kpi-card"><h4>OPEN</h4><p style="color: #dc2626;">${openCase}</p></div><div class="kpi-card"><h4>RATA-RATA DURASI</h4><p style="color: #6d28d9;">${avgResolutionTime}</p></div></div><table><thead><tr><th>Rank</th><th>Kategori Masalah</th><th>Frekuensi</th><th>Persentase</th></tr></thead><tbody>${categoryRowsHTML || '<tr><td colspan="4" style="padding:8px; text-align:center;">Tidak ada data pada rentang tanggal ini.</td></tr>'}</tbody></table><br><table><thead><tr><th>No</th><th>Nama PIC</th><th>Total Handle</th><th>Tuntas</th><th>Rata-Rata Durasi</th></tr></thead><tbody>${picRowsHTML || '<tr><td colspan="5" style="padding:8px; text-align:center;">Belum ada PIC tercatat.</td></tr>'}</tbody></table><br><table><thead><tr><th>No</th><th>Kamar</th><th>Dari & Tujuan</th><th>Kategori & Detail</th><th>Status</th><th>PIC</th><th>Waktu Handle & Selesai</th><th>Durasi</th><th>Catatan</th></tr></thead><tbody>${detailRowsHTML || '<tr><td colspan="9" style="padding:8px; text-align:center;">Tidak ada data pada rentang tanggal ini.</td></tr>'}</tbody></table><div class="signature-area"><div class="sig-box"><p>Dibuat Oleh,</p><br><br><br><p><b><u>${creatorName}</u></b><br>Room Division Supervisor</p></div><div class="sig-box"><p>Disetujui Oleh,</p><br><br><br><p><b><u>${managerName}</u></b><br>Room Division Manager</p></div></div></body></html>`;
-      const printWin = window.open('', '_blank'); printWin.document.write(reportHTML); printWin.document.close(); closeRoomReportModal();
+        if (Array.isArray(woData)) {
+          document.getElementById("statWoPending").innerText = woData.filter(r => (r.status || "Pending").trim() === "Pending").length;
+          document.getElementById("statWoProgress").innerText = woData.filter(r => (r.status || "").trim() === "In Progress" || (r.status || "").trim() === "Hold").length;
+          document.getElementById("statWoDone").innerText = woData.filter(r => (r.status || "").trim() === "Completed").length;
+        }
+      } catch (err) {
+        console.log("Statistik portal gagal dimuat:", err);
+      }
     }
-
-    // ==========================================
-    // FUNGSI WORK ORDER (EXISTING + FILTER TGL)
-    // ==========================================
-    async function trackUserWO() {
-      const query = document.getElementById("searchQuery").value.trim().toLowerCase();
-      if (!query) return alert("Silakan masukkan Nama Pelapor atau ID Tiket.");
-      const btn = document.getElementById("btnTrack"), resultArea = document.getElementById("trackResultArea"), tbody = document.getElementById("trackTableBody");
-      btn.innerText = "Mencari..."; btn.disabled = true;
-      try {
-        const res = await fetch(API_URL + "?t=" + new Date().getTime());
-        const data = await res.json();
-        const filtered = data.filter(row => (row.id || "").toLowerCase().includes(query) || (row.pelapor || "").toLowerCase() === query);
-        resultArea.classList.remove("hidden"); tbody.innerHTML = "";
-        if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="p-3 text-center text-gray-500">Data tidak ditemukan.</td></tr>'; return; }
-        filtered.reverse().forEach(row => {
-          let badgeBg = "bg-gray-500"; const st = (row.status || "Pending").trim();
-          if (st === "In Progress") badgeBg = "bg-yellow-500"; if (st === "Hold") badgeBg = "bg-orange-600"; if (st === "Completed") badgeBg = "bg-green-600";
-          const tr = document.createElement("tr"); tr.className = "border-b";
-          tr.innerHTML = `<td class="p-2.5 font-mono text-xs">${row.id || '-'}</td><td class="p-2.5 text-xs">${row.tanggal || '-'}</td><td class="p-2.5">${row.lokasi || '-'}</td><td class="p-2.5">${row.deskripsi || '-'}</td><td class="p-2.5"><span class="px-2 py-0.5 rounded text-xs text-white ${badgeBg}">${st}</span></td><td class="p-2.5 font-medium text-blue-600">${row.pic || '-'}</td><td class="p-2.5 text-gray-600 italic">${row.remark || '-'}</td>`;
-          tbody.appendChild(tr);
-        });
-      } catch (err) { alert("Gagal mengecek status."); } finally { btn.innerText = "Cek Status"; btn.disabled = false; }
-    }
-
-    function unlockAdminDashboard() {
-      const pwd = prompt("Masukkan Password Admin:");
-      if (pwd === null) return;
-      if (pwd === ADMIN_PASSWORD) { isAdminUnlocked = true; document.getElementById("adminDashboard").classList.remove("hidden"); document.getElementById("adminLoginArea").classList.add("hidden"); loadData(); }
-      else { alert("Password Admin Salah!"); }
-    }
-    function lockAdminDashboard() { isAdminUnlocked = false; document.getElementById("adminDashboard").classList.add("hidden"); document.getElementById("adminLoginArea").classList.remove("hidden"); }
-
-    async function loadData() {
-      if (!isAdminUnlocked) return;
-      const tbody = document.getElementById("tableBody"); tbody.innerHTML = '<tr><td colspan="11" class="text-center p-4">Memuat data...</td></tr>';
-      try {
-        const res = await fetch(API_URL + "?t=" + new Date().getTime());
-        const data = await res.json();
-        if (!Array.isArray(data) || data.length === 0) { tbody.innerHTML = '<tr><td colspan="11" class="text-center p-4 text-gray-500">Belum ada data Work Order.</td></tr>'; globalWOData = []; return; }
-        globalWOData = data; renderTableData(data);
-      } catch (err) { tbody.innerHTML = '<tr><td colspan="11" class="text-center p-4 text-red-500">Gagal memuat data.</td></tr>'; }
-    }
-
-    function renderTableData(data) {
-      const tbody = document.getElementById("tableBody"); tbody.innerHTML = "";
-      [...data].reverse().forEach(row => {
-        const tr = document.createElement("tr"); tr.className = "border-b hover:bg-gray-50";
-        let badgeBg = "bg-gray-500"; const st = (row.status || "Pending").trim();
-        if (st === "In Progress") badgeBg = "bg-yellow-500"; if (st === "Hold") badgeBg = "bg-orange-600"; if (st === "Completed") badgeBg = "bg-green-600";
-        tr.innerHTML = `<td class="p-3 text-sm font-mono">${row.id || '-'}</td><td class="p-3 text-sm">${row.tanggal || '-'}</td><td class="p-3 text-sm">${row.pelapor || '-'}</td><td class="p-3 text-sm">${row.lokasi || '-'}</td><td class="p-3 text-sm">${row.deskripsi || '-'}</td><td class="p-3 text-sm font-semibold">${row.prioritas || '-'}</td><td class="p-3 text-sm"><span class="px-2 py-1 rounded text-xs text-white ${badgeBg}">${st}</span></td><td class="p-3 text-sm font-medium text-blue-600">${row.pic || '-'}</td><td class="p-3 text-sm text-purple-600 font-medium">${row.timeSolving || '-'}</td><td class="p-3 text-sm text-gray-600 italic">${row.remark || '-'}</td><td class="p-3 text-sm flex gap-1"><button onclick="updateStatus('${row.id}', 'In Progress', '${row.pic || ''}', '${row.timeSolving || ''}', '${row.remark || ''}')" class="bg-yellow-500 text-white px-2 py-1 rounded text-xs">Proses</button><button onclick="updateStatus('${row.id}', 'Hold', '${row.pic || ''}', '${row.timeSolving || ''}', '${row.remark || ''}')" class="bg-orange-600 text-white px-2 py-1 rounded text-xs">Hold</button><button onclick="updateStatus('${row.id}', 'Completed', '${row.pic || ''}', '${row.timeSolving || ''}', '${row.remark || ''}')" class="bg-green-600 text-white px-2 py-1 rounded text-xs">Selesai</button></td>`;
-        tbody.appendChild(tr);
-      });
-    }
-
-    async function submitWO(e) {
-      e.preventDefault(); const btn = document.getElementById("btnSubmit"); btn.innerText = "Mengirim..."; btn.disabled = true;
-      try {
-        await fetch(API_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ action: "create", pelapor: document.getElementById("pelapor").value, lokasi: document.getElementById("lokasi").value, deskripsi: document.getElementById("deskripsi").value, prioritas: document.getElementById("prioritas").value }) });
-        document.getElementById("woForm").reset(); alert("Work Order berhasil dikirim!"); if (isAdminUnlocked) setTimeout(loadData, 2000);
-      } catch (err) { alert("Gagal mengirim Work Order: " + err); } finally { btn.innerText = "Kirim Work Order"; btn.disabled = false; }
-    }
-
-    async function updateStatus(id, newStatus, currentPic, currentTimeSolving, currentRemark) {
-      let inputPic = currentPic || '-', inputTime = currentTimeSolving || '-', inputRemark = currentRemark || '-';
-      if (newStatus === "In Progress") { const picVal = prompt('Masukkan Nama PIC / Teknisi:', currentPic !== '-' ? currentPic : ''); if (picVal === null) return; inputPic = picVal || '-'; }
-      else if (newStatus === "Hold") { const remarkVal = prompt('Masukkan Alasan Hold:', currentRemark !== '-' ? currentRemark : ''); if (remarkVal === null) return; inputRemark = remarkVal || '-'; }
-      else if (newStatus === "Completed") { const timeVal = prompt('Masukkan Time Solving:', currentTimeSolving !== '-' ? currentTimeSolving : ''); if (timeVal === null) return; inputTime = timeVal || '-'; }
-      if (!confirm('Konfirmasi ubah status menjadi "' + newStatus + '"?')) return;
-      try {
-        await fetch(API_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ action: "updateStatus", id: id, status: newStatus, pic: inputPic, timeSolving: inputTime, remark: inputRemark }) });
-        alert("Status berhasil diperbarui!"); setTimeout(loadData, 2000);
-      } catch (err) { alert("Gagal memperbarui status."); }
-    }
-
-    function openReportModal() {
-      const now = new Date();
-      const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-      document.getElementById("reportMonth").value = monthStr;
-      syncDaysInMonth("reportMonth", "reportDayStart", "reportDayEnd");
-      document.getElementById("reportModal").classList.remove("hidden");
-    }
-    function closeReportModal() { document.getElementById("reportModal").classList.add("hidden"); }
-
-    function generateReport() {
-      const monthVal = document.getElementById("reportMonth").value;
-      const dayStart = parseInt(document.getElementById("reportDayStart").value, 10);
-      const dayEnd = parseInt(document.getElementById("reportDayEnd").value, 10);
-      const adminName = document.getElementById("adminName").value || "Admin Maintenance";
-      const managerName = document.getElementById("managerName").value || "Manager";
-
-      if (!monthVal) return alert("Pilih bulan dan tahun terlebih dahulu.");
-      if (dayStart > dayEnd) return alert("Tanggal awal tidak boleh lebih besar dari tanggal akhir.");
-
-      const [year, month] = monthVal.split('-').map(Number);
-
-      const filteredData = globalWOData.filter(row => {
-        const parsed = parseSheetDateParts(row.tanggal);
-        if (!parsed) return false;
-        return parsed.year === year &&
-               parsed.month === month &&
-               parsed.day >= dayStart &&
-               parsed.day <= dayEnd;
-      });
-
-      const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-      const periodTitle = `Tanggal ${dayStart} s/d ${dayEnd} ${monthNames[month - 1]} ${year}`;
-      const totalWO = filteredData.length;
-      const completedWO = filteredData.filter(r => (r.status || '').trim() === 'Completed').length;
-      const progressWO = filteredData.filter(r => (r.status || '').trim() === 'In Progress').length;
-      const holdWO = filteredData.filter(r => (r.status || '').trim() === 'Hold').length;
-      const pendingWO = filteredData.filter(r => (r.status || '').trim() === 'Pending' || !r.status).length;
-      const completionRate = totalWO > 0 ? ((completedWO / totalWO) * 100).toFixed(1) : 0;
-
-      let rowsHTML = "";
-      filteredData.forEach((item, index) => {
-        const st = (item.status || 'Pending').trim();
-        rowsHTML += `<tr style="border-bottom: 1px solid #ddd;"><td style="padding: 6px;">${index + 1}</td><td style="padding: 6px;">${item.id || '-'}</td><td style="padding: 6px;">${item.tanggal || '-'}</td><td style="padding: 6px;">${item.pelapor || '-'}</td><td style="padding: 6px;">${item.lokasi || '-'}</td><td style="padding: 6px;">${item.deskripsi || '-'}</td><td style="padding: 6px;">${item.prioritas || '-'}</td><td style="padding: 6px; font-weight: bold;">${st}</td><td style="padding: 6px;">${item.pic || '-'}</td><td style="padding: 6px;">${item.timeSolving || '-'}</td><td style="padding: 6px;">${item.remark || '-'}</td></tr>`;
-      });
-
-      const reportHTML = `<!DOCTYPE html><html><head><title>Laporan WO - ${periodTitle}</title><style>body { font-family: Arial, sans-serif; padding: 20px; } table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; } th { background-color: #f2f2f2; padding: 6px; border-bottom: 2px solid #ccc; text-align: left; } .signature-area { margin-top: 35px; display: flex; justify-content: space-between; } .sig-box { width: 40%; text-align: center; } @media print { .btn-print { display: none; } }</style></head><body><button class="btn-print" onclick="window.print()">🖨️ Cetak PDF</button><h1>LAPORAN REKAPITULASI WORK ORDER</h1><h3>ASTON Tanjung Pinang Hotel & Conference Center</h3><p><b>Periode:</b> ${periodTitle}</p><p>Total: ${totalWO} | Selesai: ${completedWO} (${completionRate}%) | Proses: ${progressWO} | Hold: ${holdWO} | Pending: ${pendingWO}</p><table><thead><tr><th>No</th><th>ID</th><th>Tanggal</th><th>Pelapor</th><th>Lokasi</th><th>Deskripsi</th><th>Prioritas</th><th>Status</th><th>PIC</th><th>Time Solving</th><th>Remark</th></tr></thead><tbody>${rowsHTML || '<tr><td colspan="11" style="padding:8px; text-align:center;">Tidak ada data Work Order pada rentang tanggal ini.</td></tr>'}</tbody></table><div class="signature-area"><div class="sig-box"><p>Dibuat Oleh,</p><br><br><br><p><b><u>${adminName}</u></b></p></div><div class="sig-box"><p>Disetujui Oleh,</p><br><br><br><p><b><u>${managerName}</u></b></p></div></div></body></html>`;
-      const printWin = window.open('', '_blank'); printWin.document.write(reportHTML); printWin.document.close(); closeReportModal();
-    }
+    window.addEventListener("DOMContentLoaded", loadPortalStats);
   </script>
 </body>
 </html>
