@@ -13,9 +13,9 @@
 <body class="bg-slate-50 text-slate-800 min-h-screen">
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwF2X4joQuKfF8oKc1xtWp7VwmCegrPPCJZbo6KZX8hhp3DOeMAYqN_6voXGO7D6ccEiw/exec";
-    const HK_PASSWORD = "hk123";
-    const ENG_PASSWORD = "eng123";
+    const API_URL = "https://script.google.com/macros/s/AKfycbyy4Dx-rdIjYqQCKnsH68xLAoGjaqEaN5_ffuO0LSM4A4hPOGi7aENn-ePtjXXvoDAU-w/exec";
+    const HK_PASSWORD = "hk2026";
+    const ENG_PASSWORD = "eng_26";
   </script>
 
   <!-- ======================================================== -->
@@ -99,7 +99,6 @@
   <!-- HALAMAN UTAMA ROOM DIVISION (DESKTOP & TABLET)           -->
   <!-- ======================================================== -->
   <div id="mainDashboardContainer">
-    <!-- Top Navbar -->
     <header class="bg-slate-900 text-white border-b-4 border-amber-500 shadow-md sticky top-0 z-30">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap justify-between items-center gap-3">
         <div class="flex items-center gap-3">
@@ -116,7 +115,7 @@
             🛠️ Modul Work Order
           </a>
           <button onclick="openRoomReportModal()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 px-3.5 py-1.5 rounded-lg text-xs font-bold shadow transition">
-            📊 Laporan & KPI
+            📊 Laporan & KPI Departemen
           </button>
         </div>
       </div>
@@ -223,7 +222,6 @@
             <p class="text-xs text-slate-500">Pantau status real-time atau klik <b>⚡ Tindakan</b> untuk memperbarui progres tiket.</p>
           </div>
           
-          <!-- Toolbar Filter & Search -->
           <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
             <input type="text" id="boardSearchInput" onkeyup="applyBoardFilters()" placeholder="Cari kamar / keluhan / PIC..." class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs w-full sm:w-48 focus:ring-2 focus:ring-teal-500">
             <select id="boardFilterStatus" onchange="applyBoardFilters()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-semibold text-slate-700">
@@ -325,35 +323,56 @@
     </div>
   </div>
 
-  <!-- MODAL LAPORAN & KPI ROOM DIVISION -->
+  <!-- MODAL LAPORAN & KPI PER DEPARTEMEN (STANDAR HOTEL BINTANG 4) -->
   <div id="roomReportModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
-      <h3 class="text-lg font-extrabold text-slate-900 border-b border-slate-100 pb-2">📊 Laporan & KPI Room Division</h3>
+    <div class="bg-white rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl border-t-4 border-amber-500">
+      <div class="border-b border-slate-100 pb-2">
+        <h3 class="text-lg font-extrabold text-slate-900">📊 Tarik Laporan & KPI Departemen</h3>
+        <p class="text-xs text-slate-500">Standar SLA Hotel Bintang 4 (HK ≤ 15 Menit • Engineering ≤ 30 Menit)</p>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-800 uppercase">🎯 Pilih Departemen / Cakupan Laporan</label>
+        <select id="roomReportDept" onchange="updateReportModalDefaults()" class="w-full mt-1 p-2.5 border-2 border-teal-500 rounded-lg text-sm bg-teal-50 font-bold text-teal-950">
+          <option value="ALL">🏨 Executive Summary (Semua Departemen: HK, Eng & FO)</option>
+          <option value="HK">🛏️ Khusus Departemen Housekeeping (HK)</option>
+          <option value="ENG">🛠️ Khusus Departemen Engineering (Room Maintenance)</option>
+          <option value="FO">🛎️ Khusus Front Office (Guest Relations & Service Monitoring)</option>
+        </select>
+      </div>
+
       <div>
         <label class="block text-xs font-bold text-slate-700 uppercase">Pilih Bulan & Tahun</label>
         <input type="month" id="roomReportMonth" onchange="syncDaysInMonth('roomReportMonth', 'roomDayStart', 'roomDayEnd')" class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-sm">
       </div>
-      <div class="grid grid-cols-2 gap-3 bg-teal-50 p-3 rounded-xl border border-teal-100">
+
+      <div class="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
         <div>
-          <label class="block text-xs font-bold text-teal-900">Dari Tanggal</label>
-          <select id="roomDayStart" class="w-full mt-1 p-2 border border-teal-200 rounded-lg text-sm bg-white"></select>
+          <label class="block text-xs font-bold text-slate-700">Dari Tanggal</label>
+          <select id="roomDayStart" class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-sm bg-white"></select>
         </div>
         <div>
-          <label class="block text-xs font-bold text-teal-900">Sampai Tanggal</label>
-          <select id="roomDayEnd" class="w-full mt-1 p-2 border border-teal-200 rounded-lg text-sm bg-white"></select>
+          <label class="block text-xs font-bold text-slate-700">Sampai Tanggal</label>
+          <select id="roomDayEnd" class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-sm bg-white"></select>
         </div>
       </div>
-      <div>
-        <label class="block text-xs font-bold text-slate-700 uppercase">Dibuat Oleh (FO / HK Supervisor)</label>
-        <input type="text" id="roomCreatorName" placeholder="Contoh: Duty Manager / HK Supv" class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-sm">
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase">Dibuat Oleh</label>
+          <input type="text" id="roomCreatorName" placeholder="Nama Supervisor / Admin" class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase">Disetujui Oleh</label>
+          <input type="text" id="roomManagerName" placeholder="Nama Dept Head / GM" class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-sm">
+        </div>
       </div>
-      <div>
-        <label class="block text-xs font-bold text-slate-700 uppercase">Disetujui Oleh (Room Division Manager)</label>
-        <input type="text" id="roomManagerName" placeholder="Contoh: Room Division Manager" class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-sm">
-      </div>
+
       <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100">
         <button onclick="closeRoomReportModal()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 text-xs font-bold">Batal</button>
-        <button onclick="generateRoomReport()" class="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-xs font-bold shadow">Buka Summary & KPI</button>
+        <button onclick="generateRoomReport()" class="px-5 py-2 bg-slate-900 text-amber-400 rounded-lg hover:bg-slate-800 text-xs font-bold shadow">
+          🖨️ Buka Laporan KPI
+        </button>
       </div>
     </div>
   </div>
@@ -493,6 +512,51 @@
       return null;
     }
 
+    function parseFullDateTimeWIB(str) {
+      if (!str || str === "-") return null;
+      const clean = String(str).trim();
+      if (clean.includes("/") && clean.includes(",")) {
+        const [dPart, tPart] = clean.split(",").map(s => s.trim());
+        const [d, m, y] = dPart.split("/").map(Number);
+        const [hr, min, sec] = (tPart || "00:00:00").split(":").map(Number);
+        return new Date(y, m - 1, d, hr || 0, min || 0, sec || 0);
+      }
+      const parsed = new Date(clean);
+      return isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    // Menghitung durasi akurat (menggunakan kolom durasi atau fallback selisih waktuMulai & waktuSelesai)
+    function getEffectiveDurationMinutes(item) {
+      const durStr = item.durasi;
+      if (durStr && durStr !== "-") {
+        if (durStr.includes("< 1")) return 1;
+        let total = 0;
+        const jamMatch = durStr.match(/(\d+)\s*Jam/i);
+        const menitMatch = durStr.match(/(\d+)\s*Menit/i);
+        if (jamMatch) total += parseInt(jamMatch[1], 10) * 60;
+        if (menitMatch) total += parseInt(menitMatch[1], 10);
+        if (total > 0) return total;
+      }
+      // Fallback jika kolom durasi di sheet masih '-' padahal status sudah Resolved
+      if ((item.status || "").trim() === "Resolved") {
+        const startObj = parseFullDateTimeWIB(item.waktuMulai) || parseFullDateTimeWIB(item.tanggal);
+        const endObj = parseFullDateTimeWIB(item.waktuSelesai);
+        if (startObj && endObj) {
+          const diffMins = Math.round((endObj.getTime() - startObj.getTime()) / 60000);
+          return diffMins >= 0 ? Math.max(1, diffMins) : 1;
+        }
+      }
+      return null;
+    }
+
+    function formatMinutesToText(mins) {
+      if (mins === null || mins === undefined || isNaN(mins)) return "-";
+      const rounded = Math.max(1, Math.round(mins));
+      const h = Math.floor(rounded / 60);
+      const m = rounded % 60;
+      return h > 0 ? `${h} Jam ${m} Menit` : `${m} Menit`;
+    }
+
     // MODE FOKUS PETUGAS
     async function activatePetugasFocusMode(ticketId) {
       document.getElementById("mainDashboardContainer").classList.add("hidden");
@@ -552,8 +616,10 @@
         if (st === "Resolved") {
           document.getElementById("pfActionFormArea").classList.add("hidden");
           document.getElementById("pfCompletedArea").classList.remove("hidden");
+          const effMins = getEffectiveDurationMinutes(tiket);
+          const durDisplay = effMins !== null ? formatMinutesToText(effMins) : (tiket.durasi || "-");
           document.getElementById("pfCompletedSummary").innerText =
-            `Diselesaikan oleh ${tiket.pic || '-'} pada ${tiket.waktuSelesai || '-'} (Durasi: ${tiket.durasi || '-'}). Catatan: ${tiket.catatan || '-'}`;
+            `Diselesaikan oleh ${tiket.pic || '-'} pada ${tiket.waktuSelesai || '-'} (Durasi: ${durDisplay}). Catatan: ${tiket.catatan || '-'}`;
         } else {
           document.getElementById("pfPicName").value = (tiket.pic && tiket.pic !== "-") ? tiket.pic : "";
           document.getElementById("pfCatatan").value = (tiket.catatan && tiket.catatan !== "-") ? tiket.catatan : "";
@@ -628,7 +694,6 @@
         const data = await res.json();
         globalRoomData = Array.isArray(data) ? data : [];
 
-        // Update KPI Strip
         document.getElementById("kpiTotal").innerText = globalRoomData.length;
         document.getElementById("kpiOpen").innerText = globalRoomData.filter(r => (r.status || "Open").trim() === "Open").length;
         document.getElementById("kpiProgress").innerText = globalRoomData.filter(r => (r.status || "").trim() === "Follow Up").length;
@@ -679,6 +744,9 @@
           ? `<span class="inline-block mt-1 px-2 py-0.5 rounded bg-orange-100 text-orange-800 font-bold text-[11px]">➡️ ${tujuanVal}</span>`
           : `<span class="inline-block mt-1 px-2 py-0.5 rounded bg-teal-100 text-teal-800 font-bold text-[11px]">➡️ ${tujuanVal}</span>`;
 
+        const effMins = getEffectiveDurationMinutes(row);
+        const durText = effMins !== null ? formatMinutesToText(effMins) : (row.durasi || "-");
+
         const fotoKomplainHTML = (row.fotoKomplain && row.fotoKomplain.startsWith("http"))
           ? `<div class="mt-1"><a href="${row.fotoKomplain}" target="_blank" class="text-xs text-amber-700 underline font-semibold">📷 Foto Komplain Tamu</a></div>` : '';
 
@@ -692,7 +760,7 @@
           <td class="p-3.5 text-xs"><div class="font-semibold text-slate-700">Dari: ${row.dari || '-'}</div>${tujuanBadge}</td>
           <td class="p-3.5"><span class="text-[11px] font-bold px-2 py-0.5 bg-slate-100 rounded text-slate-700">${row.kategori || '-'}</span><p class="mt-1 text-slate-800">${row.detail || '-'}</p>${fotoKomplainHTML}</td>
           <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-bold text-white ${badge}">${st}</span></td>
-          <td class="p-3.5 text-xs space-y-1"><div><span class="text-slate-400">Mulai:</span> <span class="font-medium">${row.waktuMulai || '-'}</span></div><div><span class="text-slate-400">Selesai:</span> <span class="font-medium">${row.waktuSelesai || '-'}</span></div>${row.durasi && row.durasi !== '-' ? `<div class="inline-block bg-purple-100 text-purple-800 px-2 py-0.5 rounded font-bold">⏱️ ${row.durasi}</div>` : ''}</td>
+          <td class="p-3.5 text-xs space-y-1"><div><span class="text-slate-400">Mulai:</span> <span class="font-medium">${row.waktuMulai || '-'}</span></div><div><span class="text-slate-400">Selesai:</span> <span class="font-medium">${row.waktuSelesai || '-'}</span></div>${durText !== '-' ? `<div class="inline-block bg-purple-100 text-purple-800 px-2 py-0.5 rounded font-bold">⏱️ ${durText}</div>` : ''}</td>
           <td class="p-3.5 text-xs"><div class="font-bold text-slate-800">PIC: ${row.pic || '-'}</div><div class="text-slate-600 italic mt-0.5">${row.catatan || '-'}</div>${fotoBuktiHTML}</td>
           <td class="p-3.5 text-xs text-right">${st !== 'Resolved' ? `<button onclick="openQuickActionModal('${row.id}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3.5 py-2 rounded-lg font-bold shadow-xs transition">⚡ Tindakan</button>` : '<span class="inline-block px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-bold">✔ Tuntas</span>'}</td>
         `;
@@ -820,96 +888,409 @@
       } catch (err) { alert("Gagal mengirim data: " + err); } finally { btn.innerText = "📢 Kirim Info & Notifikasi WhatsApp"; btn.disabled = false; }
     }
 
-    // LAPORAN & KPI
+    // ========================================================
+    // LAPORAN & KPI STANDAR HOTEL BINTANG 4 PER DEPARTEMEN
+    // ========================================================
     function openRoomReportModal() {
       const now = new Date();
       const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
       document.getElementById("roomReportMonth").value = monthStr;
       syncDaysInMonth("roomReportMonth", "roomDayStart", "roomDayEnd");
+      updateReportModalDefaults();
       document.getElementById("roomReportModal").classList.remove("hidden");
     }
+
     function closeRoomReportModal() { document.getElementById("roomReportModal").classList.add("hidden"); }
 
-    function parseDurationToMinutes(durStr) {
-      if (!durStr || durStr === "-") return null;
-      if (durStr.includes("< 1")) return 1;
-      let total = 0;
-      const jamMatch = durStr.match(/(\d+)\s*Jam/i);
-      const menitMatch = durStr.match(/(\d+)\s*Menit/i);
-      if (jamMatch) total += parseInt(jamMatch[1]) * 60;
-      if (menitMatch) total += parseInt(menitMatch[1]);
-      return total > 0 ? total : null;
-    }
-
-    function formatMinutesToText(mins) {
-      if (!mins || isNaN(mins)) return "-";
-      const rounded = Math.round(mins);
-      const h = Math.floor(rounded / 60);
-      const m = rounded % 60;
-      return h > 0 ? `${h} Jam ${m} Menit` : `${m} Menit`;
+    function updateReportModalDefaults() {
+      const dept = document.getElementById("roomReportDept").value;
+      const creatorEl = document.getElementById("roomCreatorName");
+      const managerEl = document.getElementById("roomManagerName");
+      if (dept === "HK") {
+        creatorEl.placeholder = "Contoh: HK Supervisor / Order Taker";
+        managerEl.placeholder = "Contoh: Executive Housekeeper";
+      } else if (dept === "ENG") {
+        creatorEl.placeholder = "Contoh: Engineering Supervisor";
+        managerEl.placeholder = "Contoh: Chief Engineering";
+      } else if (dept === "FO") {
+        creatorEl.placeholder = "Contoh: Duty Manager / GRO";
+        managerEl.placeholder = "Contoh: Front Office Manager";
+      } else {
+        creatorEl.placeholder = "Contoh: Duty Manager / Admin";
+        managerEl.placeholder = "Contoh: Room Division Manager / GM";
+      }
     }
 
     function generateRoomReport() {
+      const deptScope = document.getElementById("roomReportDept").value;
       const monthVal = document.getElementById("roomReportMonth").value;
       const dayStart = parseInt(document.getElementById("roomDayStart").value, 10);
       const dayEnd = parseInt(document.getElementById("roomDayEnd").value, 10);
-      const creatorName = document.getElementById("roomCreatorName").value || "Room Division Supervisor";
-      const managerName = document.getElementById("roomManagerName").value || "Room Division Manager";
 
       if (!monthVal) return alert("Pilih bulan dan tahun terlebih dahulu.");
       if (dayStart > dayEnd) return alert("Tanggal awal tidak boleh lebih besar dari tanggal akhir.");
 
       const [year, month] = monthVal.split('-').map(Number);
 
-      const filtered = globalRoomData.filter(row => {
+      // Filter berdasarkan rentang tanggal
+      const dateFiltered = globalRoomData.filter(row => {
         const parsed = parseSheetDateParts(row.tanggal);
         if (!parsed) return false;
         return parsed.year === year && parsed.month === month && parsed.day >= dayStart && parsed.day <= dayEnd;
       });
 
+      // Konfigurasi parameter SLA & Metadata per Departemen (Standar Hotel Bintang 4)
+      let reportTitle = "EXECUTIVE KPI REPORT — ROOM DIVISION COORDINATION";
+      let deptSubtitle = "All Departments (Housekeeping, Engineering & Front Office)";
+      let slaTargetMinutes = 20; // Rata-rata gabungan
+      let slaLabel = "SLA Target: HK ≤ 15m | ENG ≤ 30m";
+      let defaultCreator = "Duty Manager / Room Div. Admin";
+      let defaultManager = "Room Division Manager / General Manager";
+      let creatorRole = "Prepared By (Supervisor)";
+      let managerRole = "Approved By (Management)";
+
+      let filtered = dateFiltered;
+
+      if (deptScope === "HK") {
+        reportTitle = "DEPARTMENTAL KPI REPORT — HOUSEKEEPING (HK)";
+        deptSubtitle = "Guest Room Requests, Amenities, Cleanliness & Room Status";
+        slaTargetMinutes = 15;
+        slaLabel = "4-Star Hotel Standard SLA: ≤ 15 Menit";
+        defaultCreator = "Housekeeping Supervisor";
+        defaultManager = "Executive Housekeeper";
+        creatorRole = "Housekeeping Supervisor";
+        managerRole = "Executive Housekeeper";
+        filtered = dateFiltered.filter(r => !String(r.tujuan || "Housekeeping (HK)").includes("Engineering"));
+      } else if (deptScope === "ENG") {
+        reportTitle = "DEPARTMENTAL KPI REPORT — ENGINEERING (ROOM MAINTENANCE)";
+        deptSubtitle = "In-Room Technical Repairs, AC, Plumbing, Electrical & AV";
+        slaTargetMinutes = 30;
+        slaLabel = "4-Star Hotel Standard SLA: ≤ 30 Menit";
+        defaultCreator = "Engineering Supervisor";
+        defaultManager = "Chief Engineering";
+        creatorRole = "Engineering Supervisor";
+        managerRole = "Chief Engineering";
+        filtered = dateFiltered.filter(r => String(r.tujuan || "").includes("Engineering"));
+      } else if (deptScope === "FO") {
+        reportTitle = "DEPARTMENTAL KPI REPORT — FRONT OFFICE (GUEST RELATIONS)";
+        deptSubtitle = "Guest Complaint Logging, Service Recovery & Resolution Monitoring";
+        slaTargetMinutes = 20;
+        slaLabel = "4-Star Service Recovery Target: ≤ 20 Menit";
+        defaultCreator = "Duty Manager / Front Office Supv";
+        defaultManager = "Front Office Manager";
+        creatorRole = "Front Office Supervisor";
+        managerRole = "Front Office Manager";
+        filtered = dateFiltered.filter(r => String(r.dari || "").includes("Front Office"));
+      }
+
+      const creatorName = document.getElementById("roomCreatorName").value.trim() || defaultCreator;
+      const managerName = document.getElementById("roomManagerName").value.trim() || defaultManager;
+
       const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
       const periodTitle = `Tanggal ${dayStart} s/d ${dayEnd} ${monthNames[month - 1]} ${year}`;
+
       const totalCase = filtered.length;
       const resolvedCase = filtered.filter(r => (r.status || '').trim() === 'Resolved').length;
       const progressCase = filtered.filter(r => (r.status || '').trim() === 'Follow Up').length;
       const openCase = filtered.filter(r => (r.status || '').trim() === 'Open').length;
+      const resolutionRate = totalCase > 0 ? ((resolvedCase / totalCase) * 100).toFixed(1) : "0.0";
 
-      let totalMinutesAll = 0, validDurationCount = 0;
-      const categoryStats = {}, picStats = {};
+      let totalMinutesAll = 0;
+      let validDurationCount = 0;
+      let withinSlaCount = 0;
+
+      const categoryStats = {};
+      const picStats = {};
+
       filtered.forEach(item => {
         const kat = item.kategori || "Lainnya";
         categoryStats[kat] = (categoryStats[kat] || 0) + 1;
-        const mins = parseDurationToMinutes(item.durasi);
-        if (mins !== null) { totalMinutesAll += mins; validDurationCount++; }
+
+        const isEngTicket = String(item.tujuan || "").includes("Engineering");
+        const ticketSlaLimit = deptScope === "ALL" ? (isEngTicket ? 30 : 15) : slaTargetMinutes;
+
+        const mins = getEffectiveDurationMinutes(item);
+        if (mins !== null) {
+          totalMinutesAll += mins;
+          validDurationCount++;
+          if (mins <= ticketSlaLimit) withinSlaCount++;
+        }
+
         const pic = (item.pic && item.pic !== "-") ? item.pic.trim() : null;
         if (pic) {
-          if (!picStats[pic]) picStats[pic] = { totalHandled: 0, resolvedCount: 0, totalMins: 0, validDurCount: 0 };
+          if (!picStats[pic]) {
+            picStats[pic] = { totalHandled: 0, resolvedCount: 0, totalMins: 0, validDurCount: 0, slaMetCount: 0 };
+          }
           picStats[pic].totalHandled++;
           if ((item.status || "").trim() === "Resolved") picStats[pic].resolvedCount++;
-          if (mins !== null) { picStats[pic].totalMins += mins; picStats[pic].validDurCount++; }
+          if (mins !== null) {
+            picStats[pic].totalMins += mins;
+            picStats[pic].validDurCount++;
+            if (mins <= ticketSlaLimit) picStats[pic].slaMetCount++;
+          }
         }
       });
 
       const avgResolutionTime = validDurationCount > 0 ? formatMinutesToText(totalMinutesAll / validDurationCount) : "-";
+      const slaCompliancePct = validDurationCount > 0 ? ((withinSlaCount / validDurationCount) * 100).toFixed(1) : "0.0";
+
+      // Tabel Perbandingan Antar Departemen (Khusus mode Executive Summary ALL)
+      let deptComparisonSectionHTML = "";
+      if (deptScope === "ALL") {
+        const hkItems = dateFiltered.filter(r => !String(r.tujuan || "Housekeeping (HK)").includes("Engineering"));
+        const engItems = dateFiltered.filter(r => String(r.tujuan || "").includes("Engineering"));
+
+        function buildDeptRow(label, items, slaLimit) {
+          const tot = items.length;
+          const res = items.filter(r => (r.status || "").trim() === "Resolved").length;
+          const rate = tot > 0 ? ((res / tot) * 100).toFixed(1) + "%" : "0%";
+          let sumM = 0, cntM = 0, met = 0;
+          items.forEach(it => {
+            const m = getEffectiveDurationMinutes(it);
+            if (m !== null) { sumM += m; cntM++; if (m <= slaLimit) met++; }
+          });
+          const avgT = cntM > 0 ? formatMinutesToText(sumM / cntM) : "-";
+          const slaP = cntM > 0 ? ((met / cntM) * 100).toFixed(1) + "%" : "-";
+          return `<tr style="border-bottom: 1px solid #e2e8f0;">
+            <td style="padding: 7px; font-weight: bold;">${label}</td>
+            <td style="padding: 7px; text-align: center;">${tot}</td>
+            <td style="padding: 7px; text-align: center; color: #059669; font-weight: bold;">${res} (${rate})</td>
+            <td style="padding: 7px; text-align: center;">≤ ${slaLimit} Menit</td>
+            <td style="padding: 7px; text-align: center; font-weight: bold; color: #6d28d9;">${avgT}</td>
+            <td style="padding: 7px; text-align: center; font-weight: bold; color: #0f766e;">${slaP}</td>
+          </tr>`;
+        }
+
+        deptComparisonSectionHTML = `
+          <div class="section-title">1. DEPARTMENTAL KPI BENCHMARK (HOUSEKEEPING VS ENGINEERING)</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Departemen Tujuan</th>
+                <th style="text-align: center;">Total Tiket</th>
+                <th style="text-align: center;">Resolved Rate</th>
+                <th style="text-align: center;">Standar SLA</th>
+                <th style="text-align: center;">Rata-Rata Durasi</th>
+                <th style="text-align: center;">SLA Compliance</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${buildDeptRow("Housekeeping (HK)", hkItems, 15)}
+              ${buildDeptRow("Engineering (Room Maintenance)", engItems, 30)}
+            </tbody>
+          </table>
+        `;
+      }
+
+      // Tabel Pareto Kategori Masalah
       let categoryRowsHTML = "";
       Object.entries(categoryStats).sort((a, b) => b[1] - a[1]).forEach(([kat, count], idx) => {
         const pct = totalCase > 0 ? ((count / totalCase) * 100).toFixed(1) : 0;
-        categoryRowsHTML += `<tr style="border-bottom: 1px solid #ddd;"><td style="padding: 6px; text-align: center;">${idx + 1}</td><td style="padding: 6px; font-weight: bold;">${kat}</td><td style="padding: 6px; text-align: center;">${count} Kasus</td><td style="padding: 6px; text-align: center;">${pct}%</td></tr>`;
+        categoryRowsHTML += `<tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 6px; text-align: center;">${idx + 1}</td>
+          <td style="padding: 6px; font-weight: bold;">${kat}</td>
+          <td style="padding: 6px; text-align: center;">${count} Kasus</td>
+          <td style="padding: 6px; text-align: center;">${pct}%</td>
+        </tr>`;
       });
 
+      // Tabel Produktivitas PIC / Staff
       let picRowsHTML = "";
       Object.entries(picStats).sort((a, b) => b[1].totalHandled - a[1].totalHandled).forEach(([picName, stat], idx) => {
         const avgPicTime = stat.validDurCount > 0 ? formatMinutesToText(stat.totalMins / stat.validDurCount) : "Dalam Proses";
-        picRowsHTML += `<tr style="border-bottom: 1px solid #ddd;"><td style="padding: 6px; text-align: center;">${idx + 1}</td><td style="padding: 6px; font-weight: bold; color: #0f766e;">${picName}</td><td style="padding: 6px; text-align: center;">${stat.totalHandled} Tiket</td><td style="padding: 6px; text-align: center;">${stat.resolvedCount} Selesai</td><td style="padding: 6px; text-align: center; font-weight: bold; color: #6d28d9;">${avgPicTime}</td></tr>`;
+        const picSlaRate = stat.validDurCount > 0 ? ((stat.slaMetCount / stat.validDurCount) * 100).toFixed(0) + "%" : "-";
+        picRowsHTML += `<tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 6px; text-align: center;">${idx + 1}</td>
+          <td style="padding: 6px; font-weight: bold; color: #0f172a;">${picName}</td>
+          <td style="padding: 6px; text-align: center;">${stat.totalHandled} Tiket</td>
+          <td style="padding: 6px; text-align: center; color: #059669; font-weight: bold;">${stat.resolvedCount} Selesai</td>
+          <td style="padding: 6px; text-align: center; font-weight: bold; color: #6d28d9;">${avgPicTime}</td>
+          <td style="padding: 6px; text-align: center; font-weight: bold; color: #0f766e;">${picSlaRate}</td>
+        </tr>`;
       });
 
+      // Tabel Log Rincian Kasus
       let detailRowsHTML = "";
       filtered.forEach((item, idx) => {
-        detailRowsHTML += `<tr style="border-bottom: 1px solid #ddd;"><td style="padding: 5px;">${idx + 1}</td><td style="padding: 5px; font-weight: bold;">${item.kamar || '-'}</td><td style="padding: 5px;">Dari: ${item.dari || '-'}<br><b>Ke: ${item.tujuan || 'HK'}</b></td><td style="padding: 5px;"><b>${item.kategori || '-'}</b><br>${item.detail || '-'}</td><td style="padding: 5px;">${item.status || '-'}</td><td style="padding: 5px;">${item.pic || '-'}</td><td style="padding: 5px;">Mulai: ${item.waktuMulai || '-'}<br>Selesai: ${item.waktuSelesai || '-'}</td><td style="padding: 5px; font-weight: bold; color: #6d28d9;">${item.durasi || '-'}</td><td style="padding: 5px; font-style: italic;">${item.catatan || '-'}</td></tr>`;
+        const effMins = getEffectiveDurationMinutes(item);
+        const durDisplay = effMins !== null ? formatMinutesToText(effMins) : (item.durasi || "-");
+        const isEngTicket = String(item.tujuan || "").includes("Engineering");
+        const ticketSlaLimit = deptScope === "ALL" ? (isEngTicket ? 30 : 15) : slaTargetMinutes;
+
+        let slaBadge = `<span style="color:#64748b;">-</span>`;
+        if (effMins !== null) {
+          slaBadge = effMins <= ticketSlaLimit
+            ? `<span style="background:#dcfce7; color:#166534; padding:2px 6px; border-radius:4px; font-weight:bold;">ON TIME</span>`
+            : `<span style="background:#fee2e2; color:#991b1b; padding:2px 6px; border-radius:4px; font-weight:bold;">OVER SLA</span>`;
+        }
+
+        detailRowsHTML += `<tr style="border-bottom: 1px solid #e2e8f0;">
+          <td style="padding: 5px; text-align: center;">${idx + 1}</td>
+          <td style="padding: 5px; font-weight: bold;">${item.kamar || '-'}</td>
+          <td style="padding: 5px;">Dari: ${item.dari || '-'}<br><b>Ke: ${item.tujuan || 'HK'}</b></td>
+          <td style="padding: 5px;"><b>${item.kategori || '-'}</b><br>${item.detail || '-'}</td>
+          <td style="padding: 5px; text-align: center;">${item.status || '-'}</td>
+          <td style="padding: 5px; font-weight: bold;">${item.pic || '-'}</td>
+          <td style="padding: 5px;">Mulai: ${item.waktuMulai || '-'}<br>Selesai: ${item.waktuSelesai || '-'}</td>
+          <td style="padding: 5px; font-weight: bold; color: #6d28d9;">${durDisplay}</td>
+          <td style="padding: 5px; text-align: center;">${slaBadge}</td>
+          <td style="padding: 5px; font-style: italic;">${item.catatan || '-'}</td>
+        </tr>`;
       });
 
-      const reportHTML = `<!DOCTYPE html><html><head><title>KPI Room Division - ${periodTitle}</title><style>body { font-family: Arial, sans-serif; padding: 20px; color: #333; } h1, h2, h3 { margin: 2px 0; } .header-flex { border-bottom: 2px solid #0f766e; padding-bottom: 10px; margin-bottom: 15px; } .kpi-container { display: flex; gap: 10px; margin: 15px 0; } .kpi-card { flex: 1; border: 1px solid #ccc; padding: 10px; border-radius: 6px; text-align: center; background: #f8fafc; } table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 10px; } th { background-color: #f1f5f9; padding: 6px; border-bottom: 2px solid #cbd5e1; text-align: left; } .signature-area { margin-top: 35px; display: flex; justify-content: space-between; } .sig-box { width: 40%; text-align: center; font-size: 12px; } .btn-print { background: #0f766e; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-bottom: 15px; } @media print { .btn-print { display: none; } }</style></head><body><button class="btn-print" onclick="window.print()">🖨️ Cetak Summary & KPI (PDF)</button><div class="header-flex"><h1 style="color: #0f766e;">SUMMARY & KPI KOORDINASI ROOM DIVISION (FO, HK & ENG)</h1><h3 style="color: #555;">ASTON Tanjung Pinang Hotel & Conference Center</h3><p style="margin: 4px 0 0 0; font-size: 13px;"><b>Periode Laporan:</b> ${periodTitle}</p></div><div class="kpi-container"><div class="kpi-card"><h4>TOTAL KELUHAN</h4><p>${totalCase}</p></div><div class="kpi-card"><h4>SELESAI</h4><p style="color: green;">${resolvedCase}</p></div><div class="kpi-card"><h4>PROSES</h4><p style="color: #d97706;">${progressCase}</p></div><div class="kpi-card"><h4>OPEN</h4><p style="color: #dc2626;">${openCase}</p></div><div class="kpi-card"><h4>RATA-RATA DURASI</h4><p style="color: #6d28d9;">${avgResolutionTime}</p></div></div><table><thead><tr><th>Rank</th><th>Kategori Masalah</th><th>Frekuensi</th><th>Persentase</th></tr></thead><tbody>${categoryRowsHTML || '<tr><td colspan="4" style="padding:8px; text-align:center;">Tidak ada data pada rentang tanggal ini.</td></tr>'}</tbody></table><br><table><thead><tr><th>No</th><th>Nama PIC</th><th>Total Handle</th><th>Tuntas</th><th>Rata-Rata Durasi</th></tr></thead><tbody>${picRowsHTML || '<tr><td colspan="5" style="padding:8px; text-align:center;">Belum ada PIC tercatat.</td></tr>'}</tbody></table><br><table><thead><tr><th>No</th><th>Kamar</th><th>Dari & Tujuan</th><th>Kategori & Detail</th><th>Status</th><th>PIC</th><th>Waktu Handle & Selesai</th><th>Durasi</th><th>Catatan</th></tr></thead><tbody>${detailRowsHTML || '<tr><td colspan="9" style="padding:8px; text-align:center;">Tidak ada data pada rentang tanggal ini.</td></tr>'}</tbody></table><div class="signature-area"><div class="sig-box"><p>Dibuat Oleh,</p><br><br><br><p><b><u>${creatorName}</u></b><br>Room Division Supervisor</p></div><div class="sig-box"><p>Disetujui Oleh,</p><br><br><br><p><b><u>${managerName}</u></b><br>Room Division Manager</p></div></div></body></html>`;
-      const printWin = window.open('', '_blank'); printWin.document.write(reportHTML); printWin.document.close(); closeRoomReportModal();
+      const secNumShift = deptScope === "ALL" ? 1 : 0;
+
+      const reportHTML = `<!DOCTYPE html>
+      <html>
+      <head>
+        <title>${reportTitle} - ${periodTitle}</title>
+        <style>
+          body { font-family: 'Segoe UI', Arial, sans-serif; padding: 24px; color: #1e293b; line-height: 1.4; }
+          .header-banner { background: #0f172a; color: #ffffff; padding: 18px 22px; border-bottom: 4px solid #f59e0b; border-radius: 8px 8px 0 0; display: flex; justify-content: space-between; align-items: center; }
+          .header-banner h1 { margin: 0; font-size: 16px; letter-spacing: 0.5px; color: #fbbf24; }
+          .header-banner h2 { margin: 3px 0 0 0; font-size: 12px; font-weight: normal; color: #e2e8f0; }
+          .meta-bar { background: #f8fafc; border: 1px solid #cbd5e1; border-top: none; padding: 10px 22px; font-size: 11px; display: flex; justify-content: space-between; border-radius: 0 0 8px 8px; margin-bottom: 18px; }
+          .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px; }
+          .kpi-box { border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 8px; text-align: center; background: #ffffff; }
+          .kpi-box .lbl { font-size: 9px; font-weight: bold; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+          .kpi-box .val { font-size: 20px; font-weight: 800; margin-top: 4px; color: #0f172a; }
+          .kpi-box .sub { font-size: 9px; color: #64748b; margin-top: 2px; }
+          .section-title { font-size: 11px; font-weight: 800; color: #0f172a; background: #f1f5f9; padding: 6px 10px; border-left: 4px solid #0f766e; margin-top: 18px; margin-bottom: 6px; letter-spacing: 0.4px; }
+          table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 12px; }
+          th { background: #f8fafc; color: #334155; font-weight: 700; padding: 7px 6px; border-top: 1px solid #cbd5e1; border-bottom: 2px solid #94a3b8; text-align: left; }
+          .signature-area { margin-top: 40px; display: flex; justify-content: space-between; page-break-inside: avoid; }
+          .sig-box { width: 38%; text-align: center; font-size: 11px; }
+          .btn-print { background: #0f172a; color: #fbbf24; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-bottom: 14px; font-size: 12px; }
+          @media print {
+            .btn-print { display: none; }
+            body { padding: 0; }
+            .header-banner { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          }
+        </style>
+      </head>
+      <body>
+        <button class="btn-print" onclick="window.print()">🖨️ Cetak Laporan Resmi / Simpan PDF</button>
+
+        <div class="header-banner">
+          <div>
+            <h1>${reportTitle}</h1>
+            <h2>ASTON TANJUNGPINANG HOTEL & CONFERENCE CENTER • ${deptSubtitle}</h2>
+          </div>
+          <div style="text-align: right; font-size: 11px;">
+            <span style="background: #1e293b; border: 1px solid #475569; padding: 4px 10px; border-radius: 4px; color: #fbbf24; font-weight: bold;">${slaLabel}</span>
+          </div>
+        </div>
+
+        <div class="meta-bar">
+          <div><b>Periode Evaluasi:</b> ${periodTitle}</div>
+          <div><b>Status Open / Proses:</b> ${openCase} Open • ${progressCase} Follow Up</div>
+          <div><b>Dicetak Pada:</b> ${new Date().toLocaleDateString('id-ID')}</div>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-box">
+            <div class="lbl">Total Request / Keluhan</div>
+            <div class="val">${totalCase}</div>
+            <div class="sub">Tiket Tercatat</div>
+          </div>
+          <div class="kpi-box">
+            <div class="lbl">Resolution Rate</div>
+            <div class="val" style="color: #059669;">${resolutionRate}%</div>
+            <div class="sub">${resolvedCase} dari ${totalCase} Selesai</div>
+          </div>
+          <div class="kpi-box">
+            <div class="lbl">SLA Compliance</div>
+            <div class="val" style="color: #0f766e;">${slaCompliancePct}%</div>
+            <div class="sub">${withinSlaCount} Tiket On-Time</div>
+          </div>
+          <div class="kpi-box">
+            <div class="lbl">Avg. Resolution Time</div>
+            <div class="val" style="color: #6d28d9;">${avgResolutionTime}</div>
+            <div class="sub">Rata-rata Kecepatan</div>
+          </div>
+          <div class="kpi-box">
+            <div class="lbl">Pending / Unresolved</div>
+            <div class="val" style="color: #dc2626;">${openCase + progressCase}</div>
+            <div class="sub">Menunggu Tuntas</div>
+          </div>
+        </div>
+
+        ${deptComparisonSectionHTML}
+
+        <div class="section-title">${1 + secNumShift}. PARETO ANALISIS KATEGORI KELUHAN & PERMINTAAN</div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 45px; text-align: center;">Rank</th>
+              <th>Kategori Masalah / Request</th>
+              <th style="width: 120px; text-align: center;">Frekuensi</th>
+              <th style="width: 120px; text-align: center;">Kontribusi (%)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${categoryRowsHTML || '<tr><td colspan="4" style="padding:8px; text-align:center;">Tidak ada data pada periode dan departemen ini.</td></tr>'}
+          </tbody>
+        </table>
+
+        <div class="section-title">${2 + secNumShift}. EVALUASI PRODUKTIVITAS & KECEPATAN PETUGAS (PIC PERFORMANCE)</div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 45px; text-align: center;">No</th>
+              <th>Nama Petugas / PIC</th>
+              <th style="text-align: center;">Total Handle</th>
+              <th style="text-align: center;">Tuntas</th>
+              <th style="text-align: center;">Rata-Rata Durasi</th>
+              <th style="text-align: center;">SLA On-Time (%)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${picRowsHTML || '<tr><td colspan="6" style="padding:8px; text-align:center;">Belum ada PIC tercatat.</td></tr>'}
+          </tbody>
+        </table>
+
+        <div class="section-title">${3 + secNumShift}. LOG RINCIAN PENANGANAN KASUS (AUDIT TRAIL)</div>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 30px; text-align: center;">No</th>
+              <th style="width: 65px;">Kamar</th>
+              <th style="width: 135px;">Dari & Tujuan</th>
+              <th>Kategori & Detail Masalah</th>
+              <th style="width: 65px; text-align: center;">Status</th>
+              <th style="width: 80px;">PIC</th>
+              <th style="width: 145px;">Waktu Handle & Selesai</th>
+              <th style="width: 75px;">Durasi</th>
+              <th style="width: 70px; text-align: center;">SLA</th>
+              <th>Tindakan / Solusi</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${detailRowsHTML || '<tr><td colspan="10" style="padding:8px; text-align:center;">Tidak ada data rincian pada periode dan departemen ini.</td></tr>'}
+          </tbody>
+        </table>
+
+        <div class="signature-area">
+          <div class="sig-box">
+            <p>Prepared By,</p>
+            <br><br><br>
+            <p style="margin:0;"><b><u>${creatorName}</u></b></p>
+            <p style="margin:2px 0 0 0; color:#64748b; font-size:10px;">${creatorRole}</p>
+          </div>
+          <div class="sig-box">
+            <p>Approved By,</p>
+            <br><br><br>
+            <p style="margin:0;"><b><u>${managerName}</u></b></p>
+            <p style="margin:2px 0 0 0; color:#64748b; font-size:10px;">${managerRole}</p>
+          </div>
+        </div>
+      </body>
+      </html>`;
+
+      const printWin = window.open('', '_blank');
+      printWin.document.write(reportHTML);
+      printWin.document.close();
+      closeRoomReportModal();
     }
   </script>
 </body>
