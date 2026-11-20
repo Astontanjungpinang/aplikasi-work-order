@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Work Order & Maintenance - ASTON Tanjungpinang</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbzY3RWYoYPmoTm9EbQth57_191JTE2tADs7K59ZSuaiH8G5MrT5p78VYJTFk3hTRqNXGQ/exec";
+    const ADMIN_PASSWORD = "admin123";
+  </script>
+
+  <!-- Top Navbar -->
+  <header class="bg-slate-900 text-white border-b-4 border-amber-500 shadow-md sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap justify-between items-center gap-3">
+      <div class="flex items-center gap-3">
+        <a href="index.html" class="bg-slate-800 hover:bg-slate-700 text-amber-400 px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-700 transition">
+          ← Portal Utama
+        </a>
+        <div>
+          <h1 class="text-base sm:text-lg font-bold tracking-tight">🛠️ Work Order & Maintenance System</h1>
+          <p class="text-[11px] text-slate-400">ASTON Tanjungpinang • Engineering & Facility Repair</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <a href="room-division.html" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-700 transition">
+          🛎️ Modul Room Division
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <!-- FORM BUAT WORK ORDER -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 border-t-4 border-t-blue-600">
+      <div class="border-b border-slate-100 pb-3 mb-4">
+        <h2 class="text-lg font-bold text-slate-900">Buat Work Order Baru</h2>
+        <p class="text-xs text-slate-500">Laporkan kerusakan fasilitas, mesin, atau permintaan perbaikan area hotel kepada tim Engineering.</p>
+      </div>
+      <form id="woForm" onsubmit="submitWO(event)" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase">Nama Pelapor</label>
+            <input type="text" id="pelapor" placeholder="Nama staf & departemen" required class="w-full mt-1 p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase">Lokasi / Ruangan</label>
+            <input type="text" id="lokasi" placeholder="Contoh: Ballroom / Kitchen / Pool" required class="w-full mt-1 p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase">Tingkat Prioritas</label>
+            <select id="prioritas" class="w-full mt-1 p-2.5 border border-slate-300 rounded-lg text-sm bg-white font-semibold">
+              <option value="Rendah">🟢 Rendah (Normal)</option>
+              <option value="Sedang">🟡 Sedang (Perlu Segera)</option>
+              <option value="Tinggi">🔴 Tinggi (Urgent)</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase">Deskripsi Masalah / Pekerjaan</label>
+          <textarea id="deskripsi" placeholder="Jelaskan detail kerusakan secara spesifik..." required class="w-full mt-1 p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" rows="3"></textarea>
+        </div>
+        <div class="flex justify-end">
+          <button type="submit" id="btnSubmit" class="w-full md:w-auto px-8 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl font-bold text-sm shadow transition">
+            🚀 Kirim Work Order
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- LACAK PROGRES WORK ORDER -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+      <h2 class="text-base font-bold mb-1 text-slate-900">🔍 Lacak Progres Work Order Anda</h2>
+      <p class="text-xs text-slate-500 mb-3">Masukkan nama pelapor atau kode tiket WO untuk melihat status pengerjaan teknisi.</p>
+      <div class="flex flex-col sm:flex-row gap-2">
+        <input type="text" id="searchQuery" placeholder="Masukkan Nama Pelapor atau ID Tiket..." class="flex-1 p-2.5 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500">
+        <button onclick="trackUserWO()" id="btnTrack" class="bg-slate-900 hover:bg-slate-800 text-amber-400 px-6 py-2.5 rounded-xl text-sm font-bold shadow transition">
+          Cek Status
+        </button>
+      </div>
+      <div id="trackResultArea" class="hidden mt-4 overflow-x-auto">
+        <table class="w-full text-left border-collapse border border-slate-200 rounded-lg overflow-hidden">
+          <thead>
+            <tr class="bg-slate-50 border-b border-slate-200 text-xs text-slate-600">
+              <th class="p-3 font-bold">ID Tiket</th>
+              <th class="p-3 font-bold">Tanggal</th>
+              <th class="p-3 font-bold">Lokasi</th>
+              <th class="p-3 font-bold">Deskripsi</th>
+              <th class="p-3 font-bold">Status</th>
+              <th class="p-3 font-bold">PIC Teknisi</th>
+              <th class="p-3 font-bold">Keterangan / Remark</th>
+            </tr>
+          </thead>
+          <tbody id="trackTableBody" class="text-sm divide-y divide-slate-100"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TOMBOL BUKA DASHBOARD ADMIN -->
+    <div id="adminLoginArea" class="text-center pt-2">
+      <button onclick="unlockAdminDashboard()" class="bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-xl font-bold text-xs tracking-wide uppercase shadow-md border border-slate-700 transition">
+        🔐 Buka Dashboard Admin / Daftar Work Order
+      </button>
+    </div>
+
+    <!-- DASHBOARD ADMIN WORK ORDER -->
+    <div id="adminDashboard" class="hidden bg-white p-6 rounded-2xl shadow-md space-y-4 border-2 border-blue-600">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-b border-slate-100 pb-4">
+        <div>
+          <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 text-[10px] font-extrabold uppercase">Admin Access Active</span>
+          <h2 class="text-lg font-extrabold text-slate-900 mt-1">Daftar Work Order (Tim Engineering Admin)</h2>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="openReportModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-lg text-xs font-bold shadow">📄 Cetak Laporan</button>
+          <button onclick="loadData()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-3.5 py-2 rounded-lg text-xs font-bold">🔄 Refresh Data</button>
+          <button onclick="lockAdminDashboard()" class="bg-rose-600 hover:bg-rose-700 text-white px-3.5 py-2 rounded-lg text-xs font-bold">🔒 Kunci Dashboard</button>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-600">
+              <th class="p-3">ID</th>
+              <th class="p-3">Tanggal</th>
+              <th class="p-3">Pelapor</th>
+              <th class="p-3">Lokasi</th>
+              <th class="p-3">Deskripsi</th>
+              <th class="p-3">Prioritas</th>
+              <th class="p-3">Status</th>
+              <th class="p-3">PIC Teknisi</th>
+              <th class="p-3">Time Solving</th>
+              <th class="p-3">Remark</th>
+              <th class="p-3">Aksi Admin</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody" class="text-sm divide-y divide-slate-100">
+            <tr><td colspan="11" class="text-center p-6 text-slate-400">Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL LAPORAN WORK ORDER -->
+  <div id="reportModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+      <h3 class="text-lg font-extrabold text-slate-900 border-b border-slate-100 pb-2">📄 Cetak Laporan Work Order</h3>
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase">Pilih Bulan & Tahun</label>
+        <input type="month" id="reportMonth" onchange="syncDaysInMonth('reportMonth', 'reportDayStart', 'reportDayEnd')" class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-sm">
+      </div>
+      <div class="grid grid-cols-2 gap-3 bg-blue-50 p-3 rounded-xl border border-blue-100">
+        <div>
+          <label class="block text-xs font-bold text-blue-900">Dari Tanggal</label>
+          <select id="reportDayStart" class="w-full mt-1 p-2 border border-blue-200 rounded-lg text-sm bg-white"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-blue-900">Sampai Tanggal</label>
+          <select id="reportDayEnd" class="w-full mt-1 p-2 border border-blue-200 rounded-lg text-sm bg-white"></select>
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase">Nama Admin / Pembuat Laporan</label>
+        <input type="text" id="adminName" placeholder="Contoh: Budi Maintenance" class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase">Nama Atasan / Manager</label>
+        <input type="text" id="managerName" placeholder="Contoh: Chief Engineering" class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-sm">
+      </div>
+      <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100">
+        <button onclick="closeReportModal()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 text-xs font-bold">Batal</button>
+        <button onclick="generateReport()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-xs font-bold shadow">Buka & Cetak Laporan</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let globalWOData = [];
+    let isAdminUnlocked = false;
+
+    window.addEventListener("DOMContentLoaded", () => {
+      populateDayOptions("reportDayStart", 1);
+      populateDayOptions("reportDayEnd", 30);
+    });
+
+    function populateDayOptions(selectId, defaultVal) {
+      const sel = document.getElementById(selectId);
+      if (!sel) return;
+      sel.innerHTML = "";
+      for (let d = 1; d <= 31; d++) {
+        const opt = document.createElement("option");
+        opt.value = d;
+        opt.text = "Tanggal " + d;
+        if (d === defaultVal) opt.selected = true;
+        sel.appendChild(opt);
+      }
+    }
+
+    function syncDaysInMonth(monthInputId, startSelectId, endSelectId) {
+      const val = document.getElementById(monthInputId).value;
+      if (!val) return;
+      const [year, month] = val.split("-").map(Number);
+      const lastDay = new Date(year, month, 0).getDate();
+      document.getElementById(startSelectId).value = 1;
+      document.getElementById(endSelectId).value = lastDay;
+    }
+
+    function parseSheetDateParts(dateStr) {
+      if (!dateStr) return null;
+      const str = String(dateStr).trim();
+      const firstPart = str.split(",")[0].trim();
+      if (firstPart.includes("/")) {
+        const parts = firstPart.split("/");
+        if (parts.length === 3) {
+          return { day: parseInt(parts[0], 10), month: parseInt(parts[1], 10), year: parseInt(parts[2], 10) };
+        }
+      }
+      const d = new Date(str);
+      if (!isNaN(d.getTime())) {
+        return { day: d.getDate(), month: d.getMonth() + 1, year: d.getFullYear() };
+      }
+      return null;
+    }
+
+    async function trackUserWO() {
+      const query = document.getElementById("searchQuery").value.trim().toLowerCase();
+      if (!query) return alert("Silakan masukkan Nama Pelapor atau ID Tiket.");
+      const btn = document.getElementById("btnTrack"), resultArea = document.getElementById("trackResultArea"), tbody = document.getElementById("trackTableBody");
+      btn.innerText = "Mencari..."; btn.disabled = true;
+      try {
+        const res = await fetch(API_URL + "?t=" + Date.now());
+        const data = await res.json();
+        const filtered = data.filter(row => (row.id || "").toLowerCase().includes(query) || (row.pelapor || "").toLowerCase().includes(query));
+        resultArea.classList.remove("hidden"); tbody.innerHTML = "";
+        if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-slate-400">Data tidak ditemukan.</td></tr>'; return; }
+        filtered.reverse().forEach(row => {
+          let badgeBg = "bg-slate-500"; const st = (row.status || "Pending").trim();
+          if (st === "In Progress") badgeBg = "bg-amber-500"; if (st === "Hold") badgeBg = "bg-orange-600"; if (st === "Completed") badgeBg = "bg-emerald-600";
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td class="p-3 font-mono text-xs">${row.id || '-'}</td><td class="p-3 text-xs">${row.tanggal || '-'}</td><td class="p-3 font-semibold">${row.lokasi || '-'}</td><td class="p-3">${row.deskripsi || '-'}</td><td class="p-3"><span class="px-2.5 py-0.5 rounded-full text-xs font-bold text-white ${badgeBg}">${st}</span></td><td class="p-3 font-bold text-blue-700">${row.pic || '-'}</td><td class="p-3 text-slate-600 italic">${row.remark || '-'}</td>`;
+          tbody.appendChild(tr);
+        });
+      } catch (err) { alert("Gagal mengecek status."); } finally { btn.innerText = "Cek Status"; btn.disabled = false; }
+    }
+
+    function unlockAdminDashboard() {
+      const pwd = prompt("Masukkan Password Admin:");
+      if (pwd === null) return;
+      if (pwd === ADMIN_PASSWORD) { isAdminUnlocked = true; document.getElementById("adminDashboard").classList.remove("hidden"); document.getElementById("adminLoginArea").classList.add("hidden"); loadData(); }
+      else { alert("Password Admin Salah!"); }
+    }
+    function lockAdminDashboard() { isAdminUnlocked = false; document.getElementById("adminDashboard").classList.add("hidden"); document.getElementById("adminLoginArea").classList.remove("hidden"); }
+
+    async function loadData() {
+      if (!isAdminUnlocked) return;
+      const tbody = document.getElementById("tableBody"); tbody.innerHTML = '<tr><td colspan="11" class="text-center p-6 text-slate-400">Memuat data...</td></tr>';
+      try {
+        const res = await fetch(API_URL + "?t=" + Date.now());
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) { tbody.innerHTML = '<tr><td colspan="11" class="text-center p-6 text-slate-400">Belum ada data Work Order.</td></tr>'; globalWOData = []; return; }
+        globalWOData = data; renderTableData(data);
+      } catch (err) { tbody.innerHTML = '<tr><td colspan="11" class="text-center p-6 text-rose-500">Gagal memuat data.</td></tr>'; }
+    }
+
+    function renderTableData(data) {
+      const tbody = document.getElementById("tableBody"); tbody.innerHTML = "";
+      [...data].reverse().forEach(row => {
+        const tr = document.createElement("tr"); tr.className = "hover:bg-slate-50";
+        let badgeBg = "bg-slate-500"; const st = (row.status || "Pending").trim();
+        if (st === "In Progress") badgeBg = "bg-amber-500"; if (st === "Hold") badgeBg = "bg-orange-600"; if (st === "Completed") badgeBg = "bg-emerald-600";
+        tr.innerHTML = `<td class="p-3 text-xs font-mono">${row.id || '-'}</td><td class="p-3 text-xs">${row.tanggal || '-'}</td><td class="p-3 text-xs font-semibold">${row.pelapor || '-'}</td><td class="p-3 text-xs font-bold">${row.lokasi || '-'}</td><td class="p-3 text-xs">${row.deskripsi || '-'}</td><td class="p-3 text-xs font-bold">${row.prioritas || '-'}</td><td class="p-3 text-xs"><span class="px-2 py-0.5 rounded-full text-[11px] font-bold text-white ${badgeBg}">${st}</span></td><td class="p-3 text-xs font-bold text-blue-700">${row.pic || '-'}</td><td class="p-3 text-xs text-purple-700 font-semibold">${row.timeSolving || '-'}</td><td class="p-3 text-xs text-slate-600 italic">${row.remark || '-'}</td><td class="p-3 text-xs flex gap-1"><button onclick="updateStatus('${row.id}', 'In Progress', '${row.pic || ''}', '${row.timeSolving || ''}', '${row.remark || ''}')" class="bg-amber-500 text-white px-2 py-1 rounded font-bold">Proses</button><button onclick="updateStatus('${row.id}', 'Hold', '${row.pic || ''}', '${row.timeSolving || ''}', '${row.remark || ''}')" class="bg-orange-600 text-white px-2 py-1 rounded font-bold">Hold</button><button onclick="updateStatus('${row.id}', 'Completed', '${row.pic || ''}', '${row.timeSolving || ''}', '${row.remark || ''}')" class="bg-emerald-600 text-white px-2 py-1 rounded font-bold">Selesai</button></td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function submitWO(e) {
+      e.preventDefault(); const btn = document.getElementById("btnSubmit"); btn.innerText = "Mengirim..."; btn.disabled = true;
+      try {
+        await fetch(API_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ action: "create", pelapor: document.getElementById("pelapor").value, lokasi: document.getElementById("lokasi").value, deskripsi: document.getElementById("deskripsi").value, prioritas: document.getElementById("prioritas").value }) });
+        document.getElementById("woForm").reset(); alert("Work Order berhasil dikirim!"); if (isAdminUnlocked) setTimeout(loadData, 2000);
+      } catch (err) { alert("Gagal mengirim Work Order: " + err); } finally { btn.innerText = "🚀 Kirim Work Order"; btn.disabled = false; }
+    }
+
+    async function updateStatus(id, newStatus, currentPic, currentTimeSolving, currentRemark) {
+      let inputPic = currentPic || '-', inputTime = currentTimeSolving || '-', inputRemark = currentRemark || '-';
+      if (newStatus === "In Progress") { const picVal = prompt('Masukkan Nama PIC / Teknisi:', currentPic !== '-' ? currentPic : ''); if (picVal === null) return; inputPic = picVal || '-'; }
+      else if (newStatus === "Hold") { const remarkVal = prompt('Masukkan Alasan Hold:', currentRemark !== '-' ? currentRemark : ''); if (remarkVal === null) return; inputRemark = remarkVal || '-'; }
+      else if (newStatus === "Completed") { const timeVal = prompt('Masukkan Time Solving:', currentTimeSolving !== '-' ? currentTimeSolving : ''); if (timeVal === null) return; inputTime = timeVal || '-'; }
+      if (!confirm('Konfirmasi ubah status menjadi "' + newStatus + '"?')) return;
+      try {
+        await fetch(API_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ action: "updateStatus", id: id, status: newStatus, pic: inputPic, timeSolving: inputTime, remark: inputRemark }) });
+        alert("Status berhasil diperbarui!"); setTimeout(loadData, 2000);
+      } catch (err) { alert("Gagal memperbarui status."); }
+    }
+
+    function openReportModal() {
+      const now = new Date();
+      const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      document.getElementById("reportMonth").value = monthStr;
+      syncDaysInMonth("reportMonth", "reportDayStart", "reportDayEnd");
+      document.getElementById("reportModal").classList.remove("hidden");
+    }
+    function closeReportModal() { document.getElementById("reportModal").classList.add("hidden"); }
+
+    function generateReport() {
+      const monthVal = document.getElementById("reportMonth").value;
+      const dayStart = parseInt(document.getElementById("reportDayStart").value, 10);
+      const dayEnd = parseInt(document.getElementById("reportDayEnd").value, 10);
+      const adminName = document.getElementById("adminName").value || "Admin Maintenance";
+      const managerName = document.getElementById("managerName").value || "Manager";
+
+      if (!monthVal) return alert("Pilih bulan dan tahun terlebih dahulu.");
+      if (dayStart > dayEnd) return alert("Tanggal awal tidak boleh lebih besar dari tanggal akhir.");
+
+      const [year, month] = monthVal.split('-').map(Number);
+
+      const filteredData = globalWOData.filter(row => {
+        const parsed = parseSheetDateParts(row.tanggal);
+        if (!parsed) return false;
+        return parsed.year === year && parsed.month === month && parsed.day >= dayStart && parsed.day <= dayEnd;
+      });
+
+      const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+      const periodTitle = `Tanggal ${dayStart} s/d ${dayEnd} ${monthNames[month - 1]} ${year}`;
+      const totalWO = filteredData.length;
+      const completedWO = filteredData.filter(r => (r.status || '').trim() === 'Completed').length;
+      const progressWO = filteredData.filter(r => (r.status || '').trim() === 'In Progress').length;
+      const holdWO = filteredData.filter(r => (r.status || '').trim() === 'Hold').length;
+      const pendingWO = filteredData.filter(r => (r.status || '').trim() === 'Pending' || !r.status).length;
+      const completionRate = totalWO > 0 ? ((completedWO / totalWO) * 100).toFixed(1) : 0;
+
+      let rowsHTML = "";
+      filteredData.forEach((item, index) => {
+        const st = (item.status || 'Pending').trim();
+        rowsHTML += `<tr style="border-bottom: 1px solid #ddd;"><td style="padding: 6px;">${index + 1}</td><td style="padding: 6px;">${item.id || '-'}</td><td style="padding: 6px;">${item.tanggal || '-'}</td><td style="padding: 6px;">${item.pelapor || '-'}</td><td style="padding: 6px;">${item.lokasi || '-'}</td><td style="padding: 6px;">${item.deskripsi || '-'}</td><td style="padding: 6px;">${item.prioritas || '-'}</td><td style="padding: 6px; font-weight: bold;">${st}</td><td style="padding: 6px;">${item.pic || '-'}</td><td style="padding: 6px;">${item.timeSolving || '-'}</td><td style="padding: 6px;">${item.remark || '-'}</td></tr>`;
+      });
+
+      const reportHTML = `<!DOCTYPE html><html><head><title>Laporan WO - ${periodTitle}</title><style>body { font-family: Arial, sans-serif; padding: 20px; } table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; } th { background-color: #f2f2f2; padding: 6px; border-bottom: 2px solid #ccc; text-align: left; } .signature-area { margin-top: 35px; display: flex; justify-content: space-between; } .sig-box { width: 40%; text-align: center; } @media print { .btn-print { display: none; } }</style></head><body><button class="btn-print" onclick="window.print()">🖨️ Cetak PDF</button><h1>LAPORAN REKAPITULASI WORK ORDER</h1><h3>ASTON Tanjung Pinang Hotel & Conference Center</h3><p><b>Periode:</b> ${periodTitle}</p><p>Total: ${totalWO} | Selesai: ${completedWO} (${completionRate}%) | Proses: ${progressWO} | Hold: ${holdWO} | Pending: ${pendingWO}</p><table><thead><tr><th>No</th><th>ID</th><th>Tanggal</th><th>Pelapor</th><th>Lokasi</th><th>Deskripsi</th><th>Prioritas</th><th>Status</th><th>PIC</th><th>Time Solving</th><th>Remark</th></tr></thead><tbody>${rowsHTML || '<tr><td colspan="11" style="padding:8px; text-align:center;">Tidak ada data Work Order pada rentang tanggal ini.</td></tr>'}</tbody></table><div class="signature-area"><div class="sig-box"><p>Dibuat Oleh,</p><br><br><br><p><b><u>${adminName}</u></b></p></div><div class="sig-box"><p>Disetujui Oleh,</p><br><br><br><p><b><u>${managerName}</u></b></p></div></div></body></html>`;
+      const printWin = window.open('', '_blank'); printWin.document.write(reportHTML); printWin.document.close(); closeReportModal();
+    }
+  </script>
+</body>
+</html>
