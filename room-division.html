@@ -13,9 +13,9 @@
 <body class="bg-slate-50 text-slate-800 min-h-screen">
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyy4Dx-rdIjYqQCKnsH68xLAoGjaqEaN5_ffuO0LSM4A4hPOGi7aENn-ePtjXXvoDAU-w/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbyHFp4dQ8JkzBdwgf8xC_0U5IZZ7dPWWYMN3NH-DVp5u8AgddRnivDGpEUfR4Q0cPRRpg/exec";
     const HK_PASSWORD = "hk2026";
-    const ENG_PASSWORD = "eng_26";
+    const ENG_PASSWORD = "eng123456";
   </script>
 
   <!-- ======================================================== -->
@@ -323,12 +323,12 @@
     </div>
   </div>
 
-  <!-- MODAL LAPORAN & KPI PER DEPARTEMEN (STANDAR HOTEL BINTANG 4) -->
+  <!-- MODAL LAPORAN & KPI PER DEPARTEMEN -->
   <div id="roomReportModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl border-t-4 border-amber-500">
       <div class="border-b border-slate-100 pb-2">
         <h3 class="text-lg font-extrabold text-slate-900">📊 Tarik Laporan & KPI Departemen</h3>
-        <p class="text-xs text-slate-500">Standar SLA Hotel Bintang 4 (HK ≤ 15 Menit • Engineering ≤ 30 Menit)</p>
+        <p class="text-xs text-slate-500">Target Waktu Penanganan (HK ≤ 15 Menit • Engineering ≤ 30 Menit)</p>
       </div>
 
       <div>
@@ -525,7 +525,6 @@
       return isNaN(parsed.getTime()) ? null : parsed;
     }
 
-    // Menghitung durasi akurat (menggunakan kolom durasi atau fallback selisih waktuMulai & waktuSelesai)
     function getEffectiveDurationMinutes(item) {
       const durStr = item.durasi;
       if (durStr && durStr !== "-") {
@@ -537,7 +536,6 @@
         if (menitMatch) total += parseInt(menitMatch[1], 10);
         if (total > 0) return total;
       }
-      // Fallback jika kolom durasi di sheet masih '-' padahal status sudah Resolved
       if ((item.status || "").trim() === "Resolved") {
         const startObj = parseFullDateTimeWIB(item.waktuMulai) || parseFullDateTimeWIB(item.tanggal);
         const endObj = parseFullDateTimeWIB(item.waktuSelesai);
@@ -889,7 +887,7 @@
     }
 
     // ========================================================
-    // LAPORAN & KPI STANDAR HOTEL BINTANG 4 PER DEPARTEMEN
+    // LAPORAN & KPI PER DEPARTEMEN
     // ========================================================
     function openRoomReportModal() {
       const now = new Date();
@@ -932,18 +930,16 @@
 
       const [year, month] = monthVal.split('-').map(Number);
 
-      // Filter berdasarkan rentang tanggal
       const dateFiltered = globalRoomData.filter(row => {
         const parsed = parseSheetDateParts(row.tanggal);
         if (!parsed) return false;
         return parsed.year === year && parsed.month === month && parsed.day >= dayStart && parsed.day <= dayEnd;
       });
 
-      // Konfigurasi parameter SLA & Metadata per Departemen (Standar Hotel Bintang 4)
       let reportTitle = "EXECUTIVE KPI REPORT — ROOM DIVISION COORDINATION";
       let deptSubtitle = "All Departments (Housekeeping, Engineering & Front Office)";
-      let slaTargetMinutes = 20; // Rata-rata gabungan
-      let slaLabel = "SLA Target: HK ≤ 15m | ENG ≤ 30m";
+      let slaTargetMinutes = 20;
+      let slaLabel = "Target SLA: HK ≤ 15m | ENG ≤ 30m";
       let defaultCreator = "Duty Manager / Room Div. Admin";
       let defaultManager = "Room Division Manager / General Manager";
       let creatorRole = "Prepared By (Supervisor)";
@@ -955,7 +951,7 @@
         reportTitle = "DEPARTMENTAL KPI REPORT — HOUSEKEEPING (HK)";
         deptSubtitle = "Guest Room Requests, Amenities, Cleanliness & Room Status";
         slaTargetMinutes = 15;
-        slaLabel = "4-Star Hotel Standard SLA: ≤ 15 Menit";
+        slaLabel = "Target Respon: ≤ 15 Menit";
         defaultCreator = "Housekeeping Supervisor";
         defaultManager = "Executive Housekeeper";
         creatorRole = "Housekeeping Supervisor";
@@ -965,7 +961,7 @@
         reportTitle = "DEPARTMENTAL KPI REPORT — ENGINEERING (ROOM MAINTENANCE)";
         deptSubtitle = "In-Room Technical Repairs, AC, Plumbing, Electrical & AV";
         slaTargetMinutes = 30;
-        slaLabel = "4-Star Hotel Standard SLA: ≤ 30 Menit";
+        slaLabel = "Target Respon: ≤ 30 Menit";
         defaultCreator = "Engineering Supervisor";
         defaultManager = "Chief Engineering";
         creatorRole = "Engineering Supervisor";
@@ -975,7 +971,7 @@
         reportTitle = "DEPARTMENTAL KPI REPORT — FRONT OFFICE (GUEST RELATIONS)";
         deptSubtitle = "Guest Complaint Logging, Service Recovery & Resolution Monitoring";
         slaTargetMinutes = 20;
-        slaLabel = "4-Star Service Recovery Target: ≤ 20 Menit";
+        slaLabel = "Target Respon: ≤ 20 Menit";
         defaultCreator = "Duty Manager / Front Office Supv";
         defaultManager = "Front Office Manager";
         creatorRole = "Front Office Supervisor";
@@ -1034,7 +1030,6 @@
       const avgResolutionTime = validDurationCount > 0 ? formatMinutesToText(totalMinutesAll / validDurationCount) : "-";
       const slaCompliancePct = validDurationCount > 0 ? ((withinSlaCount / validDurationCount) * 100).toFixed(1) : "0.0";
 
-      // Tabel Perbandingan Antar Departemen (Khusus mode Executive Summary ALL)
       let deptComparisonSectionHTML = "";
       if (deptScope === "ALL") {
         const hkItems = dateFiltered.filter(r => !String(r.tujuan || "Housekeeping (HK)").includes("Engineering"));
@@ -1069,7 +1064,7 @@
                 <th>Departemen Tujuan</th>
                 <th style="text-align: center;">Total Tiket</th>
                 <th style="text-align: center;">Resolved Rate</th>
-                <th style="text-align: center;">Standar SLA</th>
+                <th style="text-align: center;">Target SLA</th>
                 <th style="text-align: center;">Rata-Rata Durasi</th>
                 <th style="text-align: center;">SLA Compliance</th>
               </tr>
@@ -1082,7 +1077,6 @@
         `;
       }
 
-      // Tabel Pareto Kategori Masalah
       let categoryRowsHTML = "";
       Object.entries(categoryStats).sort((a, b) => b[1] - a[1]).forEach(([kat, count], idx) => {
         const pct = totalCase > 0 ? ((count / totalCase) * 100).toFixed(1) : 0;
@@ -1094,7 +1088,6 @@
         </tr>`;
       });
 
-      // Tabel Produktivitas PIC / Staff
       let picRowsHTML = "";
       Object.entries(picStats).sort((a, b) => b[1].totalHandled - a[1].totalHandled).forEach(([picName, stat], idx) => {
         const avgPicTime = stat.validDurCount > 0 ? formatMinutesToText(stat.totalMins / stat.validDurCount) : "Dalam Proses";
@@ -1109,7 +1102,6 @@
         </tr>`;
       });
 
-      // Tabel Log Rincian Kasus
       let detailRowsHTML = "";
       filtered.forEach((item, idx) => {
         const effMins = getEffectiveDurationMinutes(item);
