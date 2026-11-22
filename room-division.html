@@ -614,6 +614,16 @@
       alert(`✅ Profil shift tersimpan untuk ${name} (${dept}).`);
     }
 
+    function clearStaffProfile() {
+      localStorage.removeItem("aston_staff_profile");
+      document.getElementById("profNameInput").value = "";
+      document.getElementById("profDeptInput").value = "Front Office (FO)";
+      document.getElementById("profPinInput").value = "";
+      applySavedProfileToUI();
+      closeProfileModal();
+      alert("✅ Profil shift di HP ini telah direset.");
+    }
+
     // Navigasi Bawah Khusus Mobile App
     function mobileNavToForm() {
       document.getElementById("inputFormSection").scrollIntoView({ behavior: "smooth" });
