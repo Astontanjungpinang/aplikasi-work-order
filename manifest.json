@@ -1,0 +1,24 @@
+{
+  "name": "ASTON Room Division & Work Order",
+  "short_name": "ASTON Ops",
+  "description": "Sistem Koordinasi Room Division & Work Order ASTON Tanjungpinang",
+  "start_url": "/room-division.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2933/2933936.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2933/2933936.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
