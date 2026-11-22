@@ -2,21 +2,46 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Room Division Coordination - ASTON Tanjungpinang</title>
+  
+  <!-- PWA & Mobile App Meta Tags -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ASTON Ops">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2933/2933936.png">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen">
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-20 md:pb-6">
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxO3RbdQzzf0sPCF5xi_QVm_hgoARItf5hOHf5MJAHpUwacnPZKElb0wlxQMmbEclV1SA/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbzbZpa27n3m25kmYcFcLZMj5U-ixyS5IMT91P4G802554tEPXUgdeBVW1Cuh6Rgmkj2ng/exec";
     const HK_PASSWORD = "hk123";
-    const ENG_PASSWORD = "eng321";
+    const ENG_PASSWORD = "eng123";
   </script>
+
+  <!-- BANNER INSTALL PWA (MUNCUL OTOMATIS DI HP ANDROID) -->
+  <div id="pwaInstallBanner" class="hidden bg-teal-700 text-white px-4 py-2.5 flex items-center justify-between gap-2 text-xs shadow-md">
+    <div class="flex items-center gap-2">
+      <span class="text-base">📲</span>
+      <span>Pasang aplikasi <b>ASTON Ops</b> di layar utama HP untuk akses cepat!</span>
+    </div>
+    <div class="flex items-center gap-2 shrink-0">
+      <button type="button" onclick="triggerPwaInstall()" class="bg-amber-400 text-slate-950 font-extrabold px-3 py-1.5 rounded-lg shadow">
+        Install App
+      </button>
+      <button type="button" onclick="document.getElementById('pwaInstallBanner').classList.add('hidden')" class="text-teal-200 hover:text-white font-bold px-1">
+        ✕
+      </button>
+    </div>
+  </div>
 
   <!-- ======================================================== -->
   <!-- MODE FOKUS PETUGAS (MUNCUL SAAT BUKA LINK DARI WHATSAPP) -->
@@ -56,7 +81,10 @@
         <input type="hidden" id="pfTicketTujuan">
 
         <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl">
-          <label id="pfPinLabel" class="block text-xs font-bold text-slate-700 uppercase">🔐 PIN / Password Petugas <span class="text-rose-500">*</span></label>
+          <div class="flex justify-between items-center">
+            <label id="pfPinLabel" class="block text-xs font-bold text-slate-700 uppercase">🔐 PIN / Password Petugas <span class="text-rose-500">*</span></label>
+            <span id="pfAutoSavedHint" class="hidden text-[10px] font-bold text-emerald-600">✔ Terisi Otomatis</span>
+          </div>
           <input type="password" id="pfPasswordInput" placeholder="Masukkan PIN departemen..." class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-teal-500">
         </div>
 
@@ -72,7 +100,7 @@
           </div>
 
           <div>
-            <label class="block text-sm font-semibold text-slate-700">📸 Foto Bukti (Opsional saat Pending, Wajib/Disarankan saat Selesai)</label>
+            <label class="block text-sm font-semibold text-slate-700">📸 Foto Bukti (Kamera HP)</label>
             <input type="file" id="pfFotoInput" accept="image/*" capture="environment" onchange="previewAndCompressFocusImage(event)" class="w-full mt-1 text-xs text-slate-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
             <img id="pfFotoPreview" class="hidden mt-2 h-36 w-full object-cover rounded-xl border" alt="Preview Foto">
           </div>
@@ -89,46 +117,56 @@
             ✅ Klik Selesai
           </button>
         </div>
+
+        <div class="pt-2 text-center">
+          <a href="room-division.html" class="text-xs font-semibold text-teal-700 underline">← Buka Halaman Utama Room Division</a>
+        </div>
       </div>
 
       <div id="pfCompletedArea" class="hidden bg-emerald-50 border border-emerald-200 p-4 rounded-xl text-center space-y-2">
         <p class="text-emerald-700 font-bold text-base">✅ Tugas Ini Sudah Selesai</p>
         <p class="text-xs text-slate-600" id="pfCompletedSummary">-</p>
+        <div class="pt-2">
+          <a href="room-division.html" class="inline-block bg-slate-900 text-amber-400 px-4 py-2 rounded-lg text-xs font-bold">Buka Dashboard Utama</a>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- ======================================================== -->
-  <!-- HALAMAN UTAMA ROOM DIVISION (DESKTOP & TABLET)           -->
+  <!-- HALAMAN UTAMA ROOM DIVISION (DESKTOP & MOBILE APP)        -->
   <!-- ======================================================== -->
   <div id="mainDashboardContainer">
     <header class="bg-slate-900 text-white border-b-4 border-amber-500 shadow-md sticky top-0 z-30">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap justify-between items-center gap-3">
-        <div class="flex items-center gap-3">
-          <a href="index.html" class="bg-slate-800 hover:bg-slate-700 text-amber-400 px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-700 transition">
-            ← Portal Utama
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap justify-between items-center gap-2">
+        <div class="flex items-center gap-2.5">
+          <a href="index.html" class="bg-slate-800 hover:bg-slate-700 text-amber-400 px-2.5 py-1.5 rounded-lg text-xs font-bold border border-slate-700 transition">
+            ← Portal
           </a>
           <div>
-            <h1 class="text-base sm:text-lg font-bold tracking-tight">🛎️ Room Division Coordination</h1>
-            <p class="text-[11px] text-slate-400">ASTON Tanjungpinang • FO, Housekeeping & Room Engineering</p>
+            <h1 class="text-sm sm:text-lg font-bold tracking-tight">🛎️ Room Division Ops</h1>
+            <p class="text-[10px] sm:text-[11px] text-slate-400">ASTON Tanjungpinang • FO, HK & Engineering</p>
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <a href="work-order.html" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-700 transition">
-            🛠️ Modul Work Order
+          <button type="button" onclick="openProfileModal()" id="btnStaffProfileHeader" class="bg-slate-800 hover:bg-slate-700 text-teal-300 px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-700 transition">
+            👤 Set Profil Shift
+          </button>
+          <a href="work-order.html" class="hidden md:inline-block bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-700 transition">
+            🛠️ Work Order
           </a>
-          <button onclick="openRoomReportModal()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 px-3.5 py-1.5 rounded-lg text-xs font-bold shadow transition">
-            📊 Laporan & KPI Departemen
+          <button onclick="openRoomReportModal()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 px-3 py-1.5 rounded-lg text-xs font-bold shadow transition">
+            📊 <span class="hidden sm:inline">Laporan &</span> KPI
           </button>
         </div>
       </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-5">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 space-y-5">
       
       <!-- LIVE KPI STRIP (5 KARTU TERMASUK PENDING / HOLD) -->
       <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <button type="button" onclick="openBoardWithStatus('ALL')" title="Klik untuk melihat semua tiket" class="text-left bg-white p-4 rounded-xl border border-slate-200 hover:border-slate-400 shadow-sm hover:shadow transition flex items-center justify-between">
+        <button type="button" onclick="openBoardWithStatus('ALL')" title="Klik untuk melihat semua tiket" class="text-left bg-white p-3.5 rounded-xl border border-slate-200 hover:border-slate-400 shadow-sm hover:shadow transition flex items-center justify-between">
           <div>
             <p class="text-[11px] font-semibold text-slate-500 uppercase">Total Tiket</p>
             <p id="kpiTotal" class="text-2xl font-extrabold text-slate-900 mt-0.5">0</p>
@@ -136,7 +174,7 @@
           <div class="w-9 h-9 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center text-base">📋</div>
         </button>
 
-        <button type="button" onclick="openBoardWithStatus('Open')" title="Klik untuk melihat tiket Open" class="text-left bg-white p-4 rounded-xl border-l-4 border-l-rose-500 border border-slate-200 hover:border-rose-400 shadow-sm hover:shadow transition flex items-center justify-between">
+        <button type="button" onclick="openBoardWithStatus('Open')" title="Klik untuk melihat tiket Open" class="text-left bg-white p-3.5 rounded-xl border-l-4 border-l-rose-500 border border-slate-200 hover:border-rose-400 shadow-sm hover:shadow transition flex items-center justify-between">
           <div>
             <p class="text-[11px] font-semibold text-rose-600 uppercase">Open</p>
             <p id="kpiOpen" class="text-2xl font-extrabold text-rose-600 mt-0.5">0</p>
@@ -144,7 +182,7 @@
           <div class="w-9 h-9 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center text-base">🚨</div>
         </button>
 
-        <button type="button" onclick="openBoardWithStatus('Follow Up')" title="Klik untuk melihat tiket Follow Up" class="text-left bg-white p-4 rounded-xl border-l-4 border-l-amber-500 border border-slate-200 hover:border-amber-400 shadow-sm hover:shadow transition flex items-center justify-between">
+        <button type="button" onclick="openBoardWithStatus('Follow Up')" title="Klik untuk melihat tiket Follow Up" class="text-left bg-white p-3.5 rounded-xl border-l-4 border-l-amber-500 border border-slate-200 hover:border-amber-400 shadow-sm hover:shadow transition flex items-center justify-between">
           <div>
             <p class="text-[11px] font-semibold text-amber-600 uppercase">Follow Up</p>
             <p id="kpiProgress" class="text-2xl font-extrabold text-amber-600 mt-0.5">0</p>
@@ -152,7 +190,7 @@
           <div class="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-base">⏳</div>
         </button>
 
-        <button type="button" onclick="openBoardWithStatus('Pending')" title="Klik untuk melihat tiket Pending / Hold" class="text-left bg-white p-4 rounded-xl border-l-4 border-l-purple-600 border border-slate-200 hover:border-purple-400 shadow-sm hover:shadow transition flex items-center justify-between">
+        <button type="button" onclick="openBoardWithStatus('Pending')" title="Klik untuk melihat tiket Pending / Hold" class="text-left bg-white p-3.5 rounded-xl border-l-4 border-l-purple-600 border border-slate-200 hover:border-purple-400 shadow-sm hover:shadow transition flex items-center justify-between">
           <div>
             <p class="text-[11px] font-semibold text-purple-700 uppercase">Pending / Hold</p>
             <p id="kpiPending" class="text-2xl font-extrabold text-purple-700 mt-0.5">0</p>
@@ -160,7 +198,7 @@
           <div class="w-9 h-9 rounded-lg bg-purple-50 text-purple-700 flex items-center justify-center text-base">⏸️</div>
         </button>
 
-        <button type="button" onclick="openBoardWithStatus('Resolved')" title="Klik untuk melihat tiket Resolved" class="col-span-2 md:col-span-1 text-left bg-white p-4 rounded-xl border-l-4 border-l-emerald-500 border border-slate-200 hover:border-emerald-400 shadow-sm hover:shadow transition flex items-center justify-between">
+        <button type="button" onclick="openBoardWithStatus('Resolved')" title="Klik untuk melihat tiket Resolved" class="col-span-2 md:col-span-1 text-left bg-white p-3.5 rounded-xl border-l-4 border-l-emerald-500 border border-slate-200 hover:border-emerald-400 shadow-sm hover:shadow transition flex items-center justify-between">
           <div>
             <p class="text-[11px] font-semibold text-emerald-600 uppercase">Resolved</p>
             <p id="kpiResolved" class="text-2xl font-extrabold text-emerald-600 mt-0.5">0</p>
@@ -170,16 +208,16 @@
       </div>
 
       <!-- FORM INPUT KOORDINASI -->
-      <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 border-t-4 border-t-teal-600">
+      <div id="inputFormSection" class="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-slate-200 border-t-4 border-t-teal-600">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 mb-4 gap-2">
           <div>
-            <h2 class="text-lg font-bold text-slate-900">Input Koordinasi & Komplain Kamar Baru</h2>
+            <h2 class="text-base sm:text-lg font-bold text-slate-900">Input Koordinasi & Komplain Kamar Baru</h2>
             <p class="text-xs text-slate-500">Notifikasi WhatsApp beserta tautan tindakan cepat otomatis terkirim ke grup departemen tujuan.</p>
           </div>
         </div>
         
         <form id="roomForm" onsubmit="submitRoomComplaint(event)" class="space-y-4">
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-3.5">
             <div>
               <label class="block text-xs font-bold text-slate-700 uppercase">Nomor Kamar / Area</label>
               <input type="text" id="rcKamar" placeholder="Contoh: 205 / Lobby" required class="w-full mt-1 p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500">
@@ -205,14 +243,14 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
             <div class="md:col-span-2">
               <label class="block text-xs font-bold text-slate-700 uppercase">Detail Pesan / Keluhan Tamu</label>
               <textarea id="rcDetail" placeholder="Jelaskan detail permintaan tamu atau kendala kamar..." required class="w-full mt-1 p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500" rows="2"></textarea>
             </div>
             <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col justify-center">
-              <label class="block text-xs font-bold text-slate-700">📷 Foto Komplain Tamu (Opsional)</label>
-              <input type="file" id="rcFotoKomplainInput" accept="image/*" onchange="previewAndCompressComplaintImage(event)" class="w-full mt-1.5 text-xs text-slate-600 file:mr-2 file:py-1.5 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-teal-100 file:text-teal-800 hover:file:bg-teal-200">
+              <label class="block text-xs font-bold text-slate-700">📷 Foto Komplain Tamu (Kamera / Galeri)</label>
+              <input type="file" id="rcFotoKomplainInput" accept="image/*" capture="environment" onchange="previewAndCompressComplaintImage(event)" class="w-full mt-1.5 text-xs text-slate-600 file:mr-2 file:py-1.5 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-teal-100 file:text-teal-800 hover:file:bg-teal-200">
               <div id="rcFotoPreviewBox" class="hidden mt-2 flex items-center gap-2">
                 <img id="rcFotoPreview" class="h-12 w-16 object-cover rounded-lg border" alt="Preview Komplain">
                 <button type="button" onclick="clearComplaintPhoto()" class="text-xs text-rose-600 underline font-semibold">Hapus Foto</button>
@@ -221,7 +259,7 @@
           </div>
 
           <div class="flex justify-end">
-            <button type="submit" id="btnSubmitRoom" class="w-full md:w-auto px-8 bg-teal-600 hover:bg-teal-700 text-white py-2.5 rounded-xl font-bold text-sm shadow transition">
+            <button type="submit" id="btnSubmitRoom" class="w-full md:w-auto px-8 bg-teal-600 hover:bg-teal-700 text-white py-3 md:py-2.5 rounded-xl font-bold text-sm shadow transition">
               📢 Kirim Info & Notifikasi WhatsApp
             </button>
           </div>
@@ -229,7 +267,7 @@
       </div>
 
       <!-- COLLAPSIBLE LIVE BOARD (DEFAULT TERSEMBUNYI AGAR LAYAR AWAL RAPI) -->
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div id="liveBoardSection" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         
         <div onclick="toggleLiveBoard()" class="p-4 sm:px-6 bg-slate-900 hover:bg-slate-800 text-white cursor-pointer flex flex-wrap justify-between items-center gap-3 transition select-none">
           <div class="flex items-center gap-3">
@@ -254,7 +292,7 @@
           </div>
         </div>
 
-        <div id="liveBoardCollapsibleBody" class="hidden p-6 space-y-4 border-t border-slate-200">
+        <div id="liveBoardCollapsibleBody" class="hidden p-4 sm:p-6 space-y-4 border-t border-slate-200">
           <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 pb-3 border-b border-slate-100">
             <p class="text-xs text-slate-500">Klik tombol <b>⚡ Tindakan</b> pada baris tiket untuk mencatat respon, menunda (Pending), atau menyelesaikan tugas.</p>
             
@@ -301,6 +339,66 @@
       </div>
 
     </main>
+
+    <!-- BOTTOM NAVIGATION BAR KHUSUS MOBILE APP (LAYAR HP) -->
+    <nav class="md:hidden fixed bottom-0 inset-x-0 bg-slate-900 text-slate-300 border-t border-slate-800 grid grid-cols-4 text-[11px] font-bold z-40 shadow-2xl">
+      <button type="button" onclick="mobileNavToForm()" class="py-2.5 flex flex-col items-center justify-center gap-0.5 text-amber-400 active:bg-slate-800">
+        <span class="text-base">➕</span>
+        <span>Buat Tiket</span>
+      </button>
+      <button type="button" onclick="mobileNavToBoard()" class="py-2.5 flex flex-col items-center justify-center gap-0.5 hover:text-white active:bg-slate-800 relative">
+        <span class="text-base">📋</span>
+        <span>Live Board</span>
+      </button>
+      <a href="work-order.html" class="py-2.5 flex flex-col items-center justify-center gap-0.5 hover:text-white active:bg-slate-800">
+        <span class="text-base">🛠️</span>
+        <span>Work Order</span>
+      </a>
+      <button type="button" onclick="openProfileModal()" class="py-2.5 flex flex-col items-center justify-center gap-0.5 text-teal-300 active:bg-slate-800">
+        <span class="text-base">👤</span>
+        <span id="mobileNavProfileLabel">Profil Shift</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- MODAL PROFIL SHIFT PETUGAS (AUTO-SAVE NAMA & PIN DI HP) -->
+  <div id="staffProfileModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-2xl border-t-4 border-teal-600">
+      <div class="flex justify-between items-start border-b border-slate-100 pb-2">
+        <div>
+          <h3 class="text-lg font-extrabold text-slate-900">👤 Profil Shift Petugas</h3>
+          <p class="text-xs text-slate-500">Simpan nama & PIN di HP ini agar tidak perlu mengetik ulang saat merespons tiket.</p>
+        </div>
+        <button onclick="closeProfileModal()" class="text-slate-400 hover:text-slate-700 text-2xl leading-none font-bold">×</button>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase">Nama Petugas / PIC</label>
+        <input type="text" id="profNameInput" placeholder="Contoh: Andi / Siti" class="w-full mt-1 p-2.5 border border-slate-300 rounded-lg text-sm">
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase">Departemen Anda</label>
+        <select id="profDeptInput" class="w-full mt-1 p-2.5 border border-slate-300 rounded-lg text-sm bg-white">
+          <option value="Front Office (FO)">Front Office (FO)</option>
+          <option value="Housekeeping (HK)">Housekeeping (HK)</option>
+          <option value="Engineering">Engineering</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase">PIN Departemen (Opsional)</label>
+        <input type="password" id="profPinInput" placeholder="Masukkan PIN HK / Engineering" class="w-full mt-1 p-2.5 border border-slate-300 rounded-lg text-sm">
+      </div>
+
+      <div class="flex justify-between items-center pt-2 border-t border-slate-100">
+        <button type="button" onclick="clearStaffProfile()" class="text-xs text-rose-600 font-bold underline">Reset Profil</button>
+        <div class="flex gap-2">
+          <button type="button" onclick="closeProfileModal()" class="px-3.5 py-2 bg-slate-200 text-slate-700 rounded-lg text-xs font-bold">Batal</button>
+          <button type="button" onclick="saveStaffProfile()" class="px-4 py-2 bg-teal-600 text-white rounded-lg text-xs font-bold shadow">Simpan di HP</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- MODAL TINDAKAN CEPAT (DENGAN TOMBOL TUNDA / PENDING) -->
@@ -312,7 +410,7 @@
           <h3 class="text-xl font-extrabold text-slate-900 mt-1" id="qaTitleKamar">Kamar 205</h3>
           <p class="text-xs text-slate-500" id="qaSubtitleInfo">Kategori - Pelapor</p>
         </div>
-        <button onclick="closeQuickActionModal()" class="text-slate-400 hover:text-slate-700 text-2xl leading-none font-bold">&times;</button>
+        <button onclick="closeQuickActionModal()" class="text-slate-400 hover:text-slate-700 text-2xl leading-none font-bold">×</button>
       </div>
 
       <div class="bg-slate-50 p-3 rounded-xl text-sm text-slate-700 border border-slate-200 space-y-2">
@@ -329,7 +427,10 @@
       <input type="hidden" id="qaTicketTujuan">
 
       <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl">
-        <label id="qaPinLabel" class="block text-xs font-bold text-slate-700 uppercase">🔐 PIN / Password Petugas <span class="text-rose-500">*</span></label>
+        <div class="flex justify-between items-center">
+          <label id="qaPinLabel" class="block text-xs font-bold text-slate-700 uppercase">🔐 PIN / Password Petugas <span class="text-rose-500">*</span></label>
+          <span id="qaAutoSavedHint" class="hidden text-[10px] font-bold text-emerald-600">✔ Terisi Otomatis</span>
+        </div>
         <input type="password" id="qaPasswordInput" placeholder="Masukkan PIN departemen..." class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-teal-500">
       </div>
 
@@ -341,7 +442,7 @@
       <div class="border-t border-slate-100 pt-3 space-y-3">
         <div>
           <label class="block text-sm font-semibold text-slate-700">Catatan / Alasan Pending / Solusi</label>
-          <textarea id="qaCatatan" rows="2" placeholder="Wajib diisi jika Tunda (misal: Kamar Occupied/DND, tunggu CO, atau tunggu sparepart) atau saat Selesai..." class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-sm"></textarea>
+          <textarea id="qaCatatan" rows="2" placeholder="Wajib diisi jika Tunda (misal: Kamar Occupied/DND, tunggu CO) atau saat Selesai..." class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-sm"></textarea>
         </div>
 
         <div>
@@ -424,7 +525,105 @@
     let compressedBase64Photo = "";
     let compressedComplaintPhoto = "";
     let isLiveBoardOpen = false;
+    let deferredInstallPrompt = null;
 
+    // ========================================================
+    // REGISTRASI SERVICE WORKER & INSTALL PROMPT PWA
+    // ========================================================
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/sw.js").catch(() => {});
+      });
+    }
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      const banner = document.getElementById("pwaInstallBanner");
+      if (banner) banner.classList.remove("hidden");
+    });
+
+    async function triggerPwaInstall() {
+      if (!deferredInstallPrompt) return;
+      deferredInstallPrompt.prompt();
+      const { outcome } = await deferredInstallPrompt.userChoice;
+      if (outcome === "accepted") {
+        document.getElementById("pwaInstallBanner").classList.add("hidden");
+      }
+      deferredInstallPrompt = null;
+    }
+
+    // ========================================================
+    // PROFIL SHIFT PETUGAS (LOCALSTORAGE AUTO-REMEMBER)
+    // ========================================================
+    function getSavedStaffProfile() {
+      try {
+        return JSON.parse(localStorage.getItem("aston_staff_profile") || "null");
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function applySavedProfileToUI() {
+      const prof = getSavedStaffProfile();
+      const headerBtn = document.getElementById("btnStaffProfileHeader");
+      const mobileLbl = document.getElementById("mobileNavProfileLabel");
+      const dariSelect = document.getElementById("rcDari");
+
+      if (prof && prof.name) {
+        if (headerBtn) headerBtn.innerText = `👤 ${prof.name}`;
+        if (mobileLbl) mobileLbl.innerText = prof.name;
+        if (dariSelect && prof.dept) dariSelect.value = prof.dept;
+      } else {
+        if (headerBtn) headerBtn.innerText = "👤 Set Profil Shift";
+        if (mobileLbl) mobileLbl.innerText = "Profil Shift";
+      }
+    }
+
+    function openProfileModal() {
+      const prof = getSavedStaffProfile() || {};
+      document.getElementById("profNameInput").value = prof.name || "";
+      document.getElementById("profDeptInput").value = prof.dept || "Front Office (FO)";
+      document.getElementById("profPinInput").value = prof.pin || "";
+      document.getElementById("staffProfileModal").classList.remove("hidden");
+    }
+
+    function closeProfileModal() {
+      document.getElementById("staffProfileModal").classList.add("hidden");
+    }
+
+    function saveStaffProfile() {
+      const name = document.getElementById("profNameInput").value.trim();
+      const dept = document.getElementById("profDeptInput").value;
+      const pin = document.getElementById("profPinInput").value.trim();
+      if (!name) return alert("Masukkan Nama Petugas terlebih dahulu!");
+
+      localStorage.setItem("aston_staff_profile", JSON.stringify({ name, dept, pin }));
+      applySavedProfileToUI();
+      closeProfileModal();
+      alert(`✅ Profil shift tersimpan untuk ${name} (${dept}).`);
+    }
+
+    function clearStaffProfile() {
+      localStorage.removeItem("aston_staff_profile");
+      applySavedProfileToUI();
+      closeProfileModal();
+      alert("Profil shift di HP ini telah direset.");
+    }
+
+    // Navigasi Bawah Khusus Mobile App
+    function mobileNavToForm() {
+      document.getElementById("inputFormSection").scrollIntoView({ behavior: "smooth" });
+    }
+
+    function mobileNavToBoard() {
+      toggleLiveBoard(true);
+      document.getElementById("liveBoardSection").scrollIntoView({ behavior: "smooth" });
+    }
+
+    // ========================================================
+    // COLLAPSIBLE LIVE BOARD & FILTER
+    // ========================================================
     function toggleLiveBoard(forceState) {
       const bodyEl = document.getElementById("liveBoardCollapsibleBody");
       const btnTextEl = document.getElementById("liveBoardToggleBtnText");
@@ -528,6 +727,7 @@
     }
 
     window.addEventListener("DOMContentLoaded", () => {
+      applySavedProfileToUI();
       updateKategoriByTujuan();
       populateDayOptions("roomDayStart", 1);
       populateDayOptions("roomDayEnd", 30);
@@ -695,8 +895,15 @@
           document.getElementById("pfCompletedSummary").innerText =
             `Diselesaikan oleh ${tiket.pic || '-'} pada ${tiket.waktuSelesai || '-'} (Durasi: ${durDisplay}). Catatan: ${tiket.catatan || '-'}`;
         } else {
-          document.getElementById("pfPicName").value = (tiket.pic && tiket.pic !== "-") ? tiket.pic : "";
+          const prof = getSavedStaffProfile();
+          const defaultPic = (tiket.pic && tiket.pic !== "-") ? tiket.pic : (prof && prof.name ? prof.name : "");
+          document.getElementById("pfPicName").value = defaultPic;
           document.getElementById("pfCatatan").value = (tiket.catatan && tiket.catatan !== "-") ? tiket.catatan : "";
+
+          if (prof && prof.pin) {
+            document.getElementById("pfPasswordInput").value = prof.pin;
+            document.getElementById("pfAutoSavedHint").classList.remove("hidden");
+          }
         }
       } catch (err) {
         document.getElementById("petugasLoadingCard").innerHTML = '<p class="text-rose-600 font-semibold">Gagal memuat tugas. Periksa koneksi internet Anda.</p>';
@@ -749,6 +956,14 @@
         document.getElementById("pfCatatan").focus();
         return alert("Mohon tulis Catatan Penyelesaian sebelum klik Selesai!");
       }
+
+      // Simpan otomatis nama & PIN petugas ke memori HP agar shift berikutnya praktis
+      const existingProf = getSavedStaffProfile() || {};
+      localStorage.setItem("aston_staff_profile", JSON.stringify({
+        name: picName,
+        dept: existingProf.dept || ticketTujuan,
+        pin: inputPwd
+      }));
 
       const btnStart = document.getElementById("btnPfStart");
       const btnPending = document.getElementById("btnPfPending");
@@ -888,8 +1103,15 @@
       compressedBase64Photo = "";
       const tujuanText = tiket.tujuan || "Housekeeping (HK)";
       const isEng = tujuanText.includes("Engineering");
+      const prof = getSavedStaffProfile();
 
-      document.getElementById("qaPasswordInput").value = "";
+      document.getElementById("qaPasswordInput").value = (prof && prof.pin) ? prof.pin : "";
+      if (prof && prof.pin) {
+        document.getElementById("qaAutoSavedHint").classList.remove("hidden");
+      } else {
+        document.getElementById("qaAutoSavedHint").classList.add("hidden");
+      }
+
       document.getElementById("qaFotoInput").value = "";
       document.getElementById("qaFotoPreview").classList.add("hidden");
       document.getElementById("qaTicketId").value = tiket.id;
@@ -909,7 +1131,8 @@
         document.getElementById("qaComplaintPhotoBox").classList.add("hidden");
       }
 
-      document.getElementById("qaPicName").value = (tiket.pic && tiket.pic !== "-") ? tiket.pic : "";
+      const defaultPic = (tiket.pic && tiket.pic !== "-") ? tiket.pic : (prof && prof.name ? prof.name : "");
+      document.getElementById("qaPicName").value = defaultPic;
       document.getElementById("qaCatatan").value = (tiket.catatan && tiket.catatan !== "-") ? tiket.catatan : "";
       const st = (tiket.status || "Open").trim();
       const badge = document.getElementById("qaBadgeStatus");
@@ -966,6 +1189,14 @@
         return alert("Mohon isi Catatan Penyelesaian sebelum menekan tombol Selesai!");
       }
 
+      const existingProf = getSavedStaffProfile() || {};
+      localStorage.setItem("aston_staff_profile", JSON.stringify({
+        name: picName,
+        dept: existingProf.dept || ticketTujuan,
+        pin: inputPwd
+      }));
+      applySavedProfileToUI();
+
       const btnStart = document.getElementById("btnQaStart");
       const btnPending = document.getElementById("btnQaPending");
       const btnFinish = document.getElementById("btnQaFinish");
@@ -1019,6 +1250,7 @@
         });
         document.getElementById("roomForm").reset();
         clearComplaintPhoto();
+        applySavedProfileToUI();
         updateKategoriByTujuan();
         alert("Informasi berhasil dikirim ke tim " + tujuanVal + "!");
         setTimeout(loadRoomData, 2000);
