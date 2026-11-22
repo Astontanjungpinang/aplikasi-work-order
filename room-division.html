@@ -22,7 +22,7 @@
 <body class="bg-slate-50 text-slate-800 min-h-screen pb-20 md:pb-6">
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyb26-_wPb4edOlkgAO45oAUT8juZIxB-mEOiMFZWTGkchv3Rf9K0LR4_oYHfdz7cyojg/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbzY3RWYoYPmoTm9EbQth57_191JTE2tADs7K59ZSuaiH8G5MrT5p78VYJTFk3hTRqNXGQ/exec";
     const HK_PASSWORD = "hk2027";
     const ENG_PASSWORD = "eng3210";
   </script>
@@ -466,9 +466,9 @@
     </div>
   </div>
 
-  <!-- MODAL LAPORAN & KPI PER DEPARTEMEN -->
+  <!-- MODAL LAPORAN & KPI PER DEPARTEMEN (DENGAN 3 KOLOM TANDA TANGAN TERMASUK GM) -->
   <div id="roomReportModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl border-t-4 border-amber-500">
+    <div class="bg-white rounded-2xl p-6 max-w-lg w-full space-y-4 shadow-2xl border-t-4 border-amber-500">
       <div class="border-b border-slate-100 pb-2">
         <h3 class="text-lg font-extrabold text-slate-900">📊 Tarik Laporan & KPI Departemen</h3>
         <p class="text-xs text-slate-500">Target Waktu Penanganan (HK ≤ 15 Menit • Engineering ≤ 30 Menit)</p>
@@ -500,14 +500,18 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div>
           <label class="block text-xs font-bold text-slate-700 uppercase">Dibuat Oleh</label>
-          <input type="text" id="roomCreatorName" placeholder="Nama Supervisor / Admin" class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-sm">
+          <input type="text" id="roomCreatorName" placeholder="Nama Supervisor" class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-sm">
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase">Disetujui Oleh</label>
-          <input type="text" id="roomManagerName" placeholder="Nama Dept Head / GM" class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-sm">
+          <label class="block text-xs font-bold text-slate-700 uppercase">Diperiksa Oleh (Dept Head)</label>
+          <input type="text" id="roomManagerName" placeholder="Nama Dept Head" class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase">Disetujui Oleh (GM)</label>
+          <input type="text" id="roomGmName" placeholder="Nama General Manager" class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-sm">
         </div>
       </div>
 
@@ -598,7 +602,6 @@
       const pin = document.getElementById("profPinInput").value.trim();
       if (!name) return alert("Masukkan Nama Petugas terlebih dahulu!");
 
-      // Validasi kesesuaian PIN jika diisi
       if (pin) {
         if (dept.includes("Engineering") && pin !== ENG_PASSWORD) {
           return alert("❌ PIN Engineering tidak sesuai! Gunakan PIN resmi Engineering.");
@@ -970,7 +973,6 @@
         return alert("Mohon tulis Catatan Penyelesaian sebelum klik Selesai!");
       }
 
-      // Simpan otomatis nama & PIN petugas ke memori HP agar shift berikutnya praktis
       const existingProf = getSavedStaffProfile() || {};
       localStorage.setItem("aston_staff_profile", JSON.stringify({
         name: picName,
@@ -1271,7 +1273,7 @@
     }
 
     // ========================================================
-    // LAPORAN & KPI PER DEPARTEMEN
+    // LAPORAN & KPI PER DEPARTEMEN (3 KOLOM TANDA TANGAN + GM)
     // ========================================================
     function openRoomReportModal() {
       const now = new Date();
@@ -1299,7 +1301,7 @@
         managerEl.placeholder = "Contoh: Front Office Manager";
       } else {
         creatorEl.placeholder = "Contoh: Duty Manager / Admin";
-        managerEl.placeholder = "Contoh: Room Division Manager / GM";
+        managerEl.placeholder = "Contoh: Room Division Manager";
       }
     }
 
@@ -1325,9 +1327,9 @@
       let slaTargetMinutes = 20;
       let slaLabel = "Target SLA: HK ≤ 15m | ENG ≤ 30m";
       let defaultCreator = "Duty Manager / Room Div. Admin";
-      let defaultManager = "Room Division Manager / General Manager";
+      let defaultManager = "Room Division Manager";
       let creatorRole = "Prepared By (Supervisor)";
-      let managerRole = "Approved By (Management)";
+      let managerRole = "Checked By (Dept. Head)";
 
       let filtered = dateFiltered;
 
@@ -1365,6 +1367,7 @@
 
       const creatorName = document.getElementById("roomCreatorName").value.trim() || defaultCreator;
       const managerName = document.getElementById("roomManagerName").value.trim() || defaultManager;
+      const gmName = document.getElementById("roomGmName").value.trim() || "General Manager";
 
       const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
       const periodTitle = `Tanggal ${dayStart} s/d ${dayEnd} ${monthNames[month - 1]} ${year}`;
@@ -1537,8 +1540,8 @@
           .section-title { font-size: 11px; font-weight: 800; color: #0f172a; background: #f1f5f9; padding: 6px 10px; border-left: 4px solid #0f766e; margin-top: 18px; margin-bottom: 6px; letter-spacing: 0.4px; }
           table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 12px; }
           th { background: #f8fafc; color: #334155; font-weight: 700; padding: 7px 6px; border-top: 1px solid #cbd5e1; border-bottom: 2px solid #94a3b8; text-align: left; }
-          .signature-area { margin-top: 40px; display: flex; justify-content: space-between; page-break-inside: avoid; }
-          .sig-box { width: 38%; text-align: center; font-size: 11px; }
+          .signature-area { margin-top: 40px; display: flex; justify-content: space-between; gap: 16px; page-break-inside: avoid; }
+          .sig-box { width: 31%; text-align: center; font-size: 11px; }
           .btn-print { background: #0f172a; color: #fbbf24; border: none; padding: 10px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-bottom: 14px; font-size: 12px; }
           @media print {
             .btn-print { display: none; }
@@ -1657,10 +1660,16 @@
             <p style="margin:2px 0 0 0; color:#64748b; font-size:10px;">${creatorRole}</p>
           </div>
           <div class="sig-box">
-            <p>Approved By,</p>
+            <p>Checked By,</p>
             <br><br><br>
             <p style="margin:0;"><b><u>${managerName}</u></b></p>
             <p style="margin:2px 0 0 0; color:#64748b; font-size:10px;">${managerRole}</p>
+          </div>
+          <div class="sig-box">
+            <p>Approved By,</p>
+            <br><br><br>
+            <p style="margin:0;"><b><u>${gmName}</u></b></p>
+            <p style="margin:2px 0 0 0; color:#64748b; font-size:10px;">General Manager</p>
           </div>
         </div>
       </body>
