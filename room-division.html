@@ -13,9 +13,9 @@
 <body class="bg-slate-50 text-slate-800 min-h-screen">
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwEJcYwv5EomEouuNZRJa9WnaR_emsa45qvaVtAWx__HbQ96qE06wT3GZbE0r5HACkGSw/exec";
-    const HK_PASSWORD = "hk@2026";
-    const ENG_PASSWORD = "eng@123";
+    const API_URL = "https://script.google.com/macros/s/AKfycbxO3RbdQzzf0sPCF5xi_QVm_hgoARItf5hOHf5MJAHpUwacnPZKElb0wlxQMmbEclV1SA/exec";
+    const HK_PASSWORD = "hk123";
+    const ENG_PASSWORD = "eng321";
   </script>
 
   <!-- ======================================================== -->
@@ -67,22 +67,25 @@
 
         <div class="border-t border-slate-100 pt-3 space-y-3">
           <div>
-            <label class="block text-sm font-semibold text-slate-700">Catatan Penyelesaian (Wajib saat Selesai)</label>
-            <textarea id="pfCatatan" rows="2" placeholder="Tuliskan tindakan yang sudah dilakukan..." class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-sm"></textarea>
+            <label class="block text-sm font-semibold text-slate-700">Catatan / Alasan Pending / Solusi</label>
+            <textarea id="pfCatatan" rows="2" placeholder="Wajib diisi jika Tunda (misal: Kamar Occupied/DND, tunggu CO) atau saat Selesai..." class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-sm"></textarea>
           </div>
 
           <div>
-            <label class="block text-sm font-semibold text-slate-700">📸 Foto Bukti Selesai (Kamera HP)</label>
+            <label class="block text-sm font-semibold text-slate-700">📸 Foto Bukti (Opsional saat Pending, Wajib/Disarankan saat Selesai)</label>
             <input type="file" id="pfFotoInput" accept="image/*" capture="environment" onchange="previewAndCompressFocusImage(event)" class="w-full mt-1 text-xs text-slate-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
             <img id="pfFotoPreview" class="hidden mt-2 h-36 w-full object-cover rounded-xl border" alt="Preview Foto">
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3 pt-2">
-          <button type="button" id="btnPfStart" onclick="submitFocusAction('Follow Up')" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-3 rounded-xl text-sm shadow">
+        <div class="grid grid-cols-3 gap-2 pt-2">
+          <button type="button" id="btnPfStart" onclick="submitFocusAction('Follow Up')" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-2 rounded-xl text-xs shadow">
             👋 Mulai Respon
           </button>
-          <button type="button" id="btnPfFinish" onclick="submitFocusAction('Resolved')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-3 rounded-xl text-sm shadow">
+          <button type="button" id="btnPfPending" onclick="submitFocusAction('Pending')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-2 rounded-xl text-xs shadow">
+            ⏸️ Tunda / Pending
+          </button>
+          <button type="button" id="btnPfFinish" onclick="submitFocusAction('Resolved')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-2 rounded-xl text-xs shadow">
             ✅ Klik Selesai
           </button>
         </div>
@@ -123,38 +126,46 @@
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-5">
       
-      <!-- LIVE KPI STRIP (KLIK KARTU UNTUK MEMBUKA & MEMFILTER LIVE BOARD) -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <button type="button" onclick="openBoardWithStatus('ALL')" title="Klik untuk melihat semua tiket di Live Board" class="text-left bg-white p-4 rounded-xl border border-slate-200 hover:border-slate-400 shadow-sm hover:shadow transition flex items-center justify-between">
+      <!-- LIVE KPI STRIP (5 KARTU TERMASUK PENDING / HOLD) -->
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <button type="button" onclick="openBoardWithStatus('ALL')" title="Klik untuk melihat semua tiket" class="text-left bg-white p-4 rounded-xl border border-slate-200 hover:border-slate-400 shadow-sm hover:shadow transition flex items-center justify-between">
           <div>
-            <p class="text-xs font-semibold text-slate-500 uppercase">Total Tiket</p>
+            <p class="text-[11px] font-semibold text-slate-500 uppercase">Total Tiket</p>
             <p id="kpiTotal" class="text-2xl font-extrabold text-slate-900 mt-0.5">0</p>
           </div>
-          <div class="w-10 h-10 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center text-lg">📋</div>
+          <div class="w-9 h-9 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center text-base">📋</div>
         </button>
 
         <button type="button" onclick="openBoardWithStatus('Open')" title="Klik untuk melihat tiket Open" class="text-left bg-white p-4 rounded-xl border-l-4 border-l-rose-500 border border-slate-200 hover:border-rose-400 shadow-sm hover:shadow transition flex items-center justify-between">
           <div>
-            <p class="text-xs font-semibold text-rose-600 uppercase">Menunggu (Open)</p>
+            <p class="text-[11px] font-semibold text-rose-600 uppercase">Open</p>
             <p id="kpiOpen" class="text-2xl font-extrabold text-rose-600 mt-0.5">0</p>
           </div>
-          <div class="w-10 h-10 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center text-lg">🚨</div>
+          <div class="w-9 h-9 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center text-base">🚨</div>
         </button>
 
         <button type="button" onclick="openBoardWithStatus('Follow Up')" title="Klik untuk melihat tiket Follow Up" class="text-left bg-white p-4 rounded-xl border-l-4 border-l-amber-500 border border-slate-200 hover:border-amber-400 shadow-sm hover:shadow transition flex items-center justify-between">
           <div>
-            <p class="text-xs font-semibold text-amber-600 uppercase">Diproses (Follow Up)</p>
+            <p class="text-[11px] font-semibold text-amber-600 uppercase">Follow Up</p>
             <p id="kpiProgress" class="text-2xl font-extrabold text-amber-600 mt-0.5">0</p>
           </div>
-          <div class="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-lg">⏳</div>
+          <div class="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-base">⏳</div>
         </button>
 
-        <button type="button" onclick="openBoardWithStatus('Resolved')" title="Klik untuk melihat tiket Resolved" class="text-left bg-white p-4 rounded-xl border-l-4 border-l-emerald-500 border border-slate-200 hover:border-emerald-400 shadow-sm hover:shadow transition flex items-center justify-between">
+        <button type="button" onclick="openBoardWithStatus('Pending')" title="Klik untuk melihat tiket Pending / Hold" class="text-left bg-white p-4 rounded-xl border-l-4 border-l-purple-600 border border-slate-200 hover:border-purple-400 shadow-sm hover:shadow transition flex items-center justify-between">
           <div>
-            <p class="text-xs font-semibold text-emerald-600 uppercase">Selesai (Resolved)</p>
+            <p class="text-[11px] font-semibold text-purple-700 uppercase">Pending / Hold</p>
+            <p id="kpiPending" class="text-2xl font-extrabold text-purple-700 mt-0.5">0</p>
+          </div>
+          <div class="w-9 h-9 rounded-lg bg-purple-50 text-purple-700 flex items-center justify-center text-base">⏸️</div>
+        </button>
+
+        <button type="button" onclick="openBoardWithStatus('Resolved')" title="Klik untuk melihat tiket Resolved" class="col-span-2 md:col-span-1 text-left bg-white p-4 rounded-xl border-l-4 border-l-emerald-500 border border-slate-200 hover:border-emerald-400 shadow-sm hover:shadow transition flex items-center justify-between">
+          <div>
+            <p class="text-[11px] font-semibold text-emerald-600 uppercase">Resolved</p>
             <p id="kpiResolved" class="text-2xl font-extrabold text-emerald-600 mt-0.5">0</p>
           </div>
-          <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">✅</div>
+          <div class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-base">✅</div>
         </button>
       </div>
 
@@ -220,7 +231,6 @@
       <!-- COLLAPSIBLE LIVE BOARD (DEFAULT TERSEMBUNYI AGAR LAYAR AWAL RAPI) -->
       <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         
-        <!-- BAR HEADER PEMBUKA / PENUTUP LIVE BOARD -->
         <div onclick="toggleLiveBoard()" class="p-4 sm:px-6 bg-slate-900 hover:bg-slate-800 text-white cursor-pointer flex flex-wrap justify-between items-center gap-3 transition select-none">
           <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-base">
@@ -233,7 +243,7 @@
                   Memuat status...
                 </span>
               </div>
-              <p class="text-[11px] text-slate-400">Klik bar ini untuk memantau status tiket, mencari kamar, atau memperbarui tindakan petugas.</p>
+              <p class="text-[11px] text-slate-400">Klik bar ini untuk memantau status tiket, kamar Pending/Hold, atau memperbarui tindakan petugas.</p>
             </div>
           </div>
 
@@ -244,10 +254,9 @@
           </div>
         </div>
 
-        <!-- ISI LIVE BOARD (TERSEMBUNYI SECARA DEFAULT) -->
         <div id="liveBoardCollapsibleBody" class="hidden p-6 space-y-4 border-t border-slate-200">
           <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 pb-3 border-b border-slate-100">
-            <p class="text-xs text-slate-500">Klik tombol <b>⚡ Tindakan</b> pada baris tiket untuk mencatat respon atau penyelesaian.</p>
+            <p class="text-xs text-slate-500">Klik tombol <b>⚡ Tindakan</b> pada baris tiket untuk mencatat respon, menunda (Pending), atau menyelesaikan tugas.</p>
             
             <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
               <input type="text" id="boardSearchInput" onkeyup="applyBoardFilters()" placeholder="Cari kamar / keluhan / PIC..." class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs w-full sm:w-48 focus:ring-2 focus:ring-teal-500">
@@ -255,6 +264,7 @@
                 <option value="ALL">Semua Status</option>
                 <option value="Open">🔴 Open</option>
                 <option value="Follow Up">🟡 Follow Up</option>
+                <option value="Pending">🟣 Pending / Hold</option>
                 <option value="Resolved">🟢 Resolved</option>
               </select>
               <select id="boardFilterDept" onchange="applyBoardFilters()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-semibold text-slate-700">
@@ -277,7 +287,7 @@
                   <th class="p-3">Kategori & Detail Keluhan</th>
                   <th class="p-3">Status</th>
                   <th class="p-3">Durasi Penanganan</th>
-                  <th class="p-3">PIC, Solusi & Bukti</th>
+                  <th class="p-3">PIC, Alasan Pending / Solusi</th>
                   <th class="p-3 text-right">Aksi</th>
                 </tr>
               </thead>
@@ -293,7 +303,7 @@
     </main>
   </div>
 
-  <!-- MODAL TINDAKAN CEPAT -->
+  <!-- MODAL TINDAKAN CEPAT (DENGAN TOMBOL TUNDA / PENDING) -->
   <div id="quickActionModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-2xl p-6 max-w-md w-full space-y-4 shadow-2xl border-t-4 border-teal-600">
       <div class="flex justify-between items-start border-b border-slate-100 pb-3">
@@ -302,7 +312,7 @@
           <h3 class="text-xl font-extrabold text-slate-900 mt-1" id="qaTitleKamar">Kamar 205</h3>
           <p class="text-xs text-slate-500" id="qaSubtitleInfo">Kategori - Pelapor</p>
         </div>
-        <button onclick="closeQuickActionModal()" class="text-slate-400 hover:text-slate-700 text-2xl leading-none font-bold">×</button>
+        <button onclick="closeQuickActionModal()" class="text-slate-400 hover:text-slate-700 text-2xl leading-none font-bold">&times;</button>
       </div>
 
       <div class="bg-slate-50 p-3 rounded-xl text-sm text-slate-700 border border-slate-200 space-y-2">
@@ -330,8 +340,8 @@
 
       <div class="border-t border-slate-100 pt-3 space-y-3">
         <div>
-          <label class="block text-sm font-semibold text-slate-700">Catatan Penyelesaian (Wajib saat Selesai)</label>
-          <textarea id="qaCatatan" rows="2" placeholder="Tuliskan tindakan penyelesaian..." class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-sm"></textarea>
+          <label class="block text-sm font-semibold text-slate-700">Catatan / Alasan Pending / Solusi</label>
+          <textarea id="qaCatatan" rows="2" placeholder="Wajib diisi jika Tunda (misal: Kamar Occupied/DND, tunggu CO, atau tunggu sparepart) atau saat Selesai..." class="w-full mt-1 p-2 border border-slate-300 rounded-lg text-sm"></textarea>
         </div>
 
         <div>
@@ -341,11 +351,14 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-3 pt-2">
-        <button type="button" id="btnQaStart" onclick="submitQuickAction('Follow Up')" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 px-3 rounded-xl text-sm shadow">
+      <div class="grid grid-cols-3 gap-2 pt-2">
+        <button type="button" id="btnQaStart" onclick="submitQuickAction('Follow Up')" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 px-2 rounded-xl text-xs shadow">
           👋 Mulai Respon
         </button>
-        <button type="button" id="btnQaFinish" onclick="submitQuickAction('Resolved')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-3 rounded-xl text-sm shadow">
+        <button type="button" id="btnQaPending" onclick="submitQuickAction('Pending')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 px-2 rounded-xl text-xs shadow">
+          ⏸️ Tunda / Pending
+        </button>
+        <button type="button" id="btnQaFinish" onclick="submitQuickAction('Resolved')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-2 rounded-xl text-xs shadow">
           ✅ Klik Selesai
         </button>
       </div>
@@ -412,7 +425,6 @@
     let compressedComplaintPhoto = "";
     let isLiveBoardOpen = false;
 
-    // Fungsi Buka / Tutup Live Board (Opsi 1)
     function toggleLiveBoard(forceState) {
       const bodyEl = document.getElementById("liveBoardCollapsibleBody");
       const btnTextEl = document.getElementById("liveBoardToggleBtnText");
@@ -431,7 +443,6 @@
       }
     }
 
-    // Membuka Live Board otomatis saat pengguna mengklik kartu KPI di bagian atas
     function openBoardWithStatus(statusFilter) {
       const statusSelect = document.getElementById("boardFilterStatus");
       if (statusSelect) statusSelect.value = statusFilter;
@@ -613,7 +624,15 @@
       return h > 0 ? `${h} Jam ${m} Menit` : `${m} Menit`;
     }
 
-    // MODE FOKUS PETUGAS
+    function getStatusBadgeClass(statusText) {
+      const st = (statusText || "Open").trim();
+      if (st === "Resolved") return "bg-emerald-600";
+      if (st === "Follow Up") return "bg-amber-500";
+      if (st === "Pending") return "bg-purple-600";
+      return "bg-rose-500";
+    }
+
+    // MODE FOKUS PETUGAS (LINK WHATSAPP)
     async function activatePetugasFocusMode(ticketId) {
       document.getElementById("mainDashboardContainer").classList.add("hidden");
       document.getElementById("petugasFocusContainer").classList.remove("hidden");
@@ -660,9 +679,8 @@
 
         const st = (tiket.status || "Open").trim();
         const badge = document.getElementById("pfBadgeStatus");
-        badge.innerText = st;
-        badge.className = "px-2.5 py-0.5 rounded-full text-xs font-semibold text-white " +
-          (st === "Resolved" ? "bg-emerald-600" : (st === "Follow Up" ? "bg-amber-500" : "bg-rose-500"));
+        badge.innerText = st === "Pending" ? "Pending / Hold" : st;
+        badge.className = "px-2.5 py-0.5 rounded-full text-xs font-semibold text-white " + getStatusBadgeClass(st);
 
         if (tiket.waktuMulai && tiket.waktuMulai !== "-") {
           document.getElementById("pfTimeInfo").classList.remove("hidden");
@@ -723,22 +741,44 @@
       const catatanInput = document.getElementById("pfCatatan").value.trim();
 
       if (!picName) return alert("Mohon ketik Nama Anda terlebih dahulu!");
-      if (newStatus === "Resolved" && !catatanInput) return alert("Mohon tulis Catatan Penyelesaian sebelum klik Selesai!");
+      if (newStatus === "Pending" && !catatanInput) {
+        document.getElementById("pfCatatan").focus();
+        return alert("Mohon isi alasan penundaan pada kolom Catatan (contoh: Kamar Occupied / DND, atau menunggu sparepart)!");
+      }
+      if (newStatus === "Resolved" && !catatanInput) {
+        document.getElementById("pfCatatan").focus();
+        return alert("Mohon tulis Catatan Penyelesaian sebelum klik Selesai!");
+      }
 
       const btnStart = document.getElementById("btnPfStart");
+      const btnPending = document.getElementById("btnPfPending");
       const btnFinish = document.getElementById("btnPfFinish");
-      btnStart.disabled = true; btnFinish.disabled = true; btnFinish.innerText = "Menyimpan...";
+      btnStart.disabled = true; btnPending.disabled = true; btnFinish.disabled = true;
+      btnFinish.innerText = "Menyimpan...";
 
-      const catatanFinal = newStatus === "Follow Up" ? (catatanInput || "Sedang ditangani oleh " + picName) : catatanInput;
+      let catatanFinal = catatanInput;
+      if (newStatus === "Follow Up" && !catatanInput) {
+        catatanFinal = "Sedang ditangani oleh " + picName;
+      } else if (newStatus === "Pending") {
+        catatanFinal = `[PENDING / HOLD] ${catatanInput} (PIC: ${picName})`;
+      }
 
       try {
         await fetch(API_URL, {
           method: "POST", mode: "no-cors", headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: new URLSearchParams({ action: "updateRoomStatus", id: id, status: newStatus, pic: picName, catatan: catatanFinal, fotoBase64: newStatus === "Resolved" ? compressedBase64Photo : "" })
         });
-        alert(newStatus === "Follow Up" ? "👋 Respon tercatat! Waktu mulai pengerjaan sudah berjalan." : "✅ Komplain selesai! Durasi pengerjaan & foto bukti sudah tersimpan.");
+        let msg = "✅ Komplain selesai! Durasi pengerjaan & foto bukti sudah tersimpan.";
+        if (newStatus === "Follow Up") msg = "👋 Respon tercatat! Waktu mulai pengerjaan sudah berjalan.";
+        if (newStatus === "Pending") msg = "⏸️ Status tiket diubah menjadi Pending / Hold. Alasan penundaan telah dicatat.";
+        alert(msg);
         setTimeout(() => activatePetugasFocusMode(id), 1500);
-      } catch (err) { alert("Gagal menyimpan update: " + err); } finally { btnStart.disabled = false; btnFinish.disabled = false; btnFinish.innerText = "✅ Klik Selesai"; }
+      } catch (err) {
+        alert("Gagal menyimpan update: " + err);
+      } finally {
+        btnStart.disabled = false; btnPending.disabled = false; btnFinish.disabled = false;
+        btnFinish.innerText = "✅ Klik Selesai";
+      }
     }
 
     // LIVE BOARD & FILTER
@@ -752,20 +792,21 @@
 
         const openCnt = globalRoomData.filter(r => (r.status || "Open").trim() === "Open").length;
         const progressCnt = globalRoomData.filter(r => (r.status || "").trim() === "Follow Up").length;
+        const pendingCnt = globalRoomData.filter(r => (r.status || "").trim() === "Pending").length;
         const resolvedCnt = globalRoomData.filter(r => (r.status || "").trim() === "Resolved").length;
-        const activeCnt = openCnt + progressCnt;
+        const activeCnt = openCnt + progressCnt + pendingCnt;
 
         document.getElementById("kpiTotal").innerText = globalRoomData.length;
         document.getElementById("kpiOpen").innerText = openCnt;
         document.getElementById("kpiProgress").innerText = progressCnt;
+        document.getElementById("kpiPending").innerText = pendingCnt;
         document.getElementById("kpiResolved").innerText = resolvedCnt;
 
-        // Update lencana status pada bar header Live Board
         const badgeEl = document.getElementById("liveBoardActiveBadge");
         if (badgeEl) {
           if (activeCnt > 0) {
-            badgeEl.innerText = `🔔 ${activeCnt} Tiket Aktif (${openCnt} Open, ${progressCnt} Proses)`;
-            badgeEl.className = "px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500 text-white animate-pulse";
+            badgeEl.innerText = `🔔 ${activeCnt} Tiket Aktif (${openCnt} Open, ${progressCnt} Proses, ${pendingCnt} Pending)`;
+            badgeEl.className = "px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500 text-white";
           } else {
             badgeEl.innerText = `✔ Semua Tuntas (${globalRoomData.length} Riwayat)`;
             badgeEl.className = "px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40";
@@ -791,7 +832,8 @@
         const matchSearch = !searchVal ||
           String(row.kamar || "").toLowerCase().includes(searchVal) ||
           String(row.detail || "").toLowerCase().includes(searchVal) ||
-          String(row.pic || "").toLowerCase().includes(searchVal);
+          String(row.pic || "").toLowerCase().includes(searchVal) ||
+          String(row.catatan || "").toLowerCase().includes(searchVal);
         return matchStatus && matchDept && matchSearch;
       });
 
@@ -808,9 +850,8 @@
       tbody.innerHTML = "";
       [...dataList].reverse().forEach(row => {
         const st = (row.status || "Open").trim();
-        let badge = "bg-rose-500";
-        if (st === "Follow Up") badge = "bg-amber-500";
-        if (st === "Resolved") badge = "bg-emerald-600";
+        const badge = getStatusBadgeClass(st);
+        const displayStatus = st === "Pending" ? "Pending / Hold" : st;
 
         const tujuanVal = row.tujuan || "Housekeeping (HK)";
         const tujuanBadge = tujuanVal.includes("Engineering")
@@ -827,14 +868,14 @@
           ? `<div class="mt-1"><a href="${row.fotoBukti}" target="_blank" class="text-teal-600 underline font-semibold">🖼️ Foto Bukti Selesai</a></div>` : '';
 
         const tr = document.createElement("tr");
-        tr.className = "hover:bg-slate-50 transition";
+        tr.className = st === "Pending" ? "bg-purple-50/40 hover:bg-purple-50 transition" : "hover:bg-slate-50 transition";
         tr.innerHTML = `
           <td class="p-3.5"><div class="font-extrabold text-base text-slate-900">${row.kamar || '-'}</div><div class="text-[11px] text-slate-400 font-mono">${row.tanggal || '-'}</div></td>
           <td class="p-3.5 text-xs"><div class="font-semibold text-slate-700">Dari: ${row.dari || '-'}</div>${tujuanBadge}</td>
           <td class="p-3.5"><span class="text-[11px] font-bold px-2 py-0.5 bg-slate-100 rounded text-slate-700">${row.kategori || '-'}</span><p class="mt-1 text-slate-800">${row.detail || '-'}</p>${fotoKomplainHTML}</td>
-          <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-bold text-white ${badge}">${st}</span></td>
+          <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-bold text-white ${badge}">${displayStatus}</span></td>
           <td class="p-3.5 text-xs space-y-1"><div><span class="text-slate-400">Mulai:</span> <span class="font-medium">${row.waktuMulai || '-'}</span></div><div><span class="text-slate-400">Selesai:</span> <span class="font-medium">${row.waktuSelesai || '-'}</span></div>${durText !== '-' ? `<div class="inline-block bg-purple-100 text-purple-800 px-2 py-0.5 rounded font-bold">⏱️ ${durText}</div>` : ''}</td>
-          <td class="p-3.5 text-xs"><div class="font-bold text-slate-800">PIC: ${row.pic || '-'}</div><div class="text-slate-600 italic mt-0.5">${row.catatan || '-'}</div>${fotoBuktiHTML}</td>
+          <td class="p-3.5 text-xs"><div class="font-bold text-slate-800">PIC: ${row.pic || '-'}</div><div class="${st === 'Pending' ? 'text-purple-800 font-semibold' : 'text-slate-600 italic'} mt-0.5">${row.catatan || '-'}</div>${fotoBuktiHTML}</td>
           <td class="p-3.5 text-xs text-right">${st !== 'Resolved' ? `<button onclick="openQuickActionModal('${row.id}')" class="bg-teal-600 hover:bg-teal-700 text-white px-3.5 py-2 rounded-lg font-bold shadow-xs transition">⚡ Tindakan</button>` : '<span class="inline-block px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-bold">✔ Tuntas</span>'}</td>
         `;
         tbody.appendChild(tr);
@@ -872,8 +913,8 @@
       document.getElementById("qaCatatan").value = (tiket.catatan && tiket.catatan !== "-") ? tiket.catatan : "";
       const st = (tiket.status || "Open").trim();
       const badge = document.getElementById("qaBadgeStatus");
-      badge.innerText = st;
-      badge.className = "px-2.5 py-0.5 rounded-full text-xs font-semibold text-white " + (st === "Follow Up" ? "bg-amber-500" : "bg-rose-500");
+      badge.innerText = st === "Pending" ? "Pending / Hold" : st;
+      badge.className = "px-2.5 py-0.5 rounded-full text-xs font-semibold text-white " + getStatusBadgeClass(st);
       document.getElementById("quickActionModal").classList.remove("hidden");
     }
 
@@ -916,12 +957,27 @@
       const picName = document.getElementById("qaPicName").value.trim();
       const catatanInput = document.getElementById("qaCatatan").value.trim();
       if (!picName) return alert("Mohon masukkan Nama Petugas / PIC Anda terlebih dahulu!");
-      if (newStatus === "Resolved" && !catatanInput) return alert("Mohon isi Catatan Penyelesaian sebelum menekan tombol Selesai!");
+      if (newStatus === "Pending" && !catatanInput) {
+        document.getElementById("qaCatatan").focus();
+        return alert("Mohon isi alasan penundaan pada kolom Catatan (contoh: Kamar Occupied / DND, tunggu CO, atau tunggu sparepart)!");
+      }
+      if (newStatus === "Resolved" && !catatanInput) {
+        document.getElementById("qaCatatan").focus();
+        return alert("Mohon isi Catatan Penyelesaian sebelum menekan tombol Selesai!");
+      }
 
       const btnStart = document.getElementById("btnQaStart");
+      const btnPending = document.getElementById("btnQaPending");
       const btnFinish = document.getElementById("btnQaFinish");
-      btnStart.disabled = true; btnFinish.disabled = true; btnFinish.innerText = "Menyimpan...";
-      const catatanFinal = newStatus === "Follow Up" ? (catatanInput || "Sedang ditangani oleh " + picName) : catatanInput;
+      btnStart.disabled = true; btnPending.disabled = true; btnFinish.disabled = true;
+      btnFinish.innerText = "Menyimpan...";
+
+      let catatanFinal = catatanInput;
+      if (newStatus === "Follow Up" && !catatanInput) {
+        catatanFinal = "Sedang ditangani oleh " + picName;
+      } else if (newStatus === "Pending") {
+        catatanFinal = `[PENDING / HOLD] ${catatanInput} (PIC: ${picName})`;
+      }
 
       try {
         await fetch(API_URL, {
@@ -929,9 +985,17 @@
           body: new URLSearchParams({ action: "updateRoomStatus", id: id, status: newStatus, pic: picName, catatan: catatanFinal, fotoBase64: newStatus === "Resolved" ? compressedBase64Photo : "" })
         });
         closeQuickActionModal();
-        alert(newStatus === "Follow Up" ? "👋 Respon tercatat! Waktu mulai pengerjaan sudah berjalan." : "✅ Komplain selesai! Durasi pengerjaan & bukti telah tersimpan.");
+        let msg = "✅ Komplain selesai! Durasi pengerjaan & bukti telah tersimpan.";
+        if (newStatus === "Follow Up") msg = "👋 Respon tercatat! Waktu mulai pengerjaan sudah berjalan.";
+        if (newStatus === "Pending") msg = "⏸️ Status tiket diubah menjadi Pending / Hold. Alasan penundaan telah dicatat.";
+        alert(msg);
         setTimeout(loadRoomData, 2000);
-      } catch (err) { alert("Gagal memperbarui status: " + err); } finally { btnStart.disabled = false; btnFinish.disabled = false; btnFinish.innerText = "✅ Klik Selesai"; }
+      } catch (err) {
+        alert("Gagal memperbarui status: " + err);
+      } finally {
+        btnStart.disabled = false; btnPending.disabled = false; btnFinish.disabled = false;
+        btnFinish.innerText = "✅ Klik Selesai";
+      }
     }
 
     async function submitRoomComplaint(e) {
@@ -1063,6 +1127,7 @@
       const totalCase = filtered.length;
       const resolvedCase = filtered.filter(r => (r.status || '').trim() === 'Resolved').length;
       const progressCase = filtered.filter(r => (r.status || '').trim() === 'Follow Up').length;
+      const pendingCase = filtered.filter(r => (r.status || '').trim() === 'Pending').length;
       const openCase = filtered.filter(r => (r.status || '').trim() === 'Open').length;
       const resolutionRate = totalCase > 0 ? ((resolvedCase / totalCase) * 100).toFixed(1) : "0.0";
 
@@ -1165,7 +1230,7 @@
 
       let picRowsHTML = "";
       Object.entries(picStats).sort((a, b) => b[1].totalHandled - a[1].totalHandled).forEach(([picName, stat], idx) => {
-        const avgPicTime = stat.validDurCount > 0 ? formatMinutesToText(stat.totalMins / stat.validDurCount) : "Dalam Proses";
+        const avgPicTime = stat.validDurCount > 0 ? formatMinutesToText(stat.totalMins / stat.validDurCount) : "Dalam Proses / Pending";
         const picSlaRate = stat.validDurCount > 0 ? ((stat.slaMetCount / stat.validDurCount) * 100).toFixed(0) + "%" : "-";
         picRowsHTML += `<tr style="border-bottom: 1px solid #e2e8f0;">
           <td style="padding: 6px; text-align: center;">${idx + 1}</td>
@@ -1185,7 +1250,9 @@
         const ticketSlaLimit = deptScope === "ALL" ? (isEngTicket ? 30 : 15) : slaTargetMinutes;
 
         let slaBadge = `<span style="color:#64748b;">-</span>`;
-        if (effMins !== null) {
+        if ((item.status || "").trim() === "Pending") {
+          slaBadge = `<span style="background:#f3e8ff; color:#6b21a8; padding:2px 6px; border-radius:4px; font-weight:bold;">PENDING</span>`;
+        } else if (effMins !== null) {
           slaBadge = effMins <= ticketSlaLimit
             ? `<span style="background:#dcfce7; color:#166534; padding:2px 6px; border-radius:4px; font-weight:bold;">ON TIME</span>`
             : `<span style="background:#fee2e2; color:#991b1b; padding:2px 6px; border-radius:4px; font-weight:bold;">OVER SLA</span>`;
@@ -1250,7 +1317,7 @@
 
         <div class="meta-bar">
           <div><b>Periode Evaluasi:</b> ${periodTitle}</div>
-          <div><b>Status Open / Proses:</b> ${openCase} Open • ${progressCase} Follow Up</div>
+          <div><b>Status Aktif:</b> ${openCase} Open • ${progressCase} Follow Up • ${pendingCase} Pending</div>
           <div><b>Dicetak Pada:</b> ${new Date().toLocaleDateString('id-ID')}</div>
         </div>
 
@@ -1276,9 +1343,9 @@
             <div class="sub">Rata-rata Kecepatan</div>
           </div>
           <div class="kpi-box">
-            <div class="lbl">Pending / Unresolved</div>
-            <div class="val" style="color: #dc2626;">${openCase + progressCase}</div>
-            <div class="sub">Menunggu Tuntas</div>
+            <div class="lbl">Pending / Open</div>
+            <div class="val" style="color: #dc2626;">${openCase + progressCase + pendingCase}</div>
+            <div class="sub">${pendingCase} Hold • ${openCase + progressCase} Aktif</div>
           </div>
         </div>
 
@@ -1329,7 +1396,7 @@
               <th style="width: 145px;">Waktu Handle & Selesai</th>
               <th style="width: 75px;">Durasi</th>
               <th style="width: 70px; text-align: center;">SLA</th>
-              <th>Tindakan / Solusi</th>
+              <th>Tindakan / Alasan Pending</th>
             </tr>
           </thead>
           <tbody>
