@@ -598,17 +598,20 @@
       const pin = document.getElementById("profPinInput").value.trim();
       if (!name) return alert("Masukkan Nama Petugas terlebih dahulu!");
 
+      // Validasi kesesuaian PIN jika diisi
+      if (pin) {
+        if (dept.includes("Engineering") && pin !== ENG_PASSWORD) {
+          return alert("❌ PIN Engineering tidak sesuai! Gunakan PIN resmi Engineering.");
+        }
+        if (dept.includes("Housekeeping") && pin !== HK_PASSWORD) {
+          return alert("❌ PIN Housekeeping tidak sesuai! Gunakan PIN resmi HK.");
+        }
+      }
+
       localStorage.setItem("aston_staff_profile", JSON.stringify({ name, dept, pin }));
       applySavedProfileToUI();
       closeProfileModal();
       alert(`✅ Profil shift tersimpan untuk ${name} (${dept}).`);
-    }
-
-    function clearStaffProfile() {
-      localStorage.removeItem("aston_staff_profile");
-      applySavedProfileToUI();
-      closeProfileModal();
-      alert("Profil shift di HP ini telah direset.");
     }
 
     // Navigasi Bawah Khusus Mobile App
